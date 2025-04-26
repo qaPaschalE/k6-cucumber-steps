@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 const path = require("path");
-const { spawn } = require("child_process");
+const { runCucumber } = require("@cucumber/cucumber/api");
 require("dotenv").config();
+
 const argv = require("yargs")
   .usage("Usage: $0 run --feature <path> [options]")
   .option("feature", {
@@ -11,56 +12,46 @@ const argv = require("yargs")
     type: "string",
     demandOption: true,
   })
-  .option("tags", { alias: "t", describe: "Cucumber tags", type: "string" })
-  .option("reporter", {
-    alias: "r",
-    describe: "Generate reports",
-    type: "boolean",
-    default: false,
-  })
   .help().argv;
 
 const featureFilePath = path.resolve(process.cwd(), argv.feature);
-const cucumberCommand = "npx";
-const cucumberArgs = [
-  "cucumber-js",
-  featureFilePath,
-  "--require-module",
-  "@babel/register",
-  "--require",
-  path.resolve(
-    process.cwd(),
-    "node_modules",
-    "k6-cucumber-steps",
-    "step_definitions"
-  ),
-  "--format",
-  "summary",
-];
-
-if (argv.tags) cucumberArgs.push("--tags", argv.tags);
-if (argv.reporter) {
-  const reportsDir = path.resolve(process.cwd(), "reports");
-  cucumberArgs.push(
-    "--format",
-    `json:${reportsDir}/load-results.json`,
-    "--format",
-    `html:${reportsDir}/load-results.html`
-  );
-}
 
 async function main() {
-  const fullCommand = `${cucumberCommand} ${cucumberArgs.join(" ")}`;
-  console.log(`Running Cucumber using command: ${fullCommand}`);
+  try {
+    console.log(`Running tests for feature file: ${featureFilePath}`);
 
-  const cucumberProcess = spawn(cucumberCommand, cucumberArgs, {
-    cwd: process.cwd(),
-    stdio: "inherit",
-  });
+    const result = await runCucumber({
+      argv: [
+        "node",
+        "cucumber-js",
+        "--require-module",
+        "@babel/register",
+        "--require",
+        path.resolve(
+          process.cwd(),
+          "node_modules",
+          "k6-cucumber-steps",
+          "step_definitions"
+        ),
+      ],
+      cwd: process.cwd(),
+      featurePaths: [featureFilePath],
+      format: ["summary"],
+    });
 
-  cucumberProcess.on("close", (code) => {
-    process.exit(code);
-  });
+    if (!result.success) {
+      console.error("K6 Cucumber tests failed.");
+      process.exit(1);
+    }
+
+    console.log("K6 Cucumber tests finished successfully.");
+  } catch (error) {
+    console.error("An error occurred during K6 Cucumber execution:", error);
+    process.exit(1);
+  }
 }
 
-main().catch((err) => console.error(err));
+main().catch((err) => {
+  console.error("An unexpected error occurred:", err);
+  process.exit(1);
+});
