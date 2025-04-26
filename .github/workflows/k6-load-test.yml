@@ -1,0 +1,33 @@
+name: K6 Load Test
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install k6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Run load test
+        run: |
+          node load-tests/features/step_definitions/load_test_steps.js
+          k6 run load-tests/temp/k6_script.js
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+          BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}

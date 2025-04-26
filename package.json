@@ -1,0 +1,52 @@
+{
+  "name": "k6-cucumber",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "stress": "npx cucumber-js --format json:stress-results.json --tags @stress",
+    "stress:report": "cucumber-html-reporter --jsonFile=stress-results.json --output=stress-report.html",
+    "load": "npx cucumber-js --format json:load-results.json --tags @load",
+    "load:report": "cucumber-html-reporter --jsonFile=load-results.json --output=load-report.html",
+    "test": "cucumber-js features/ --require-module @babel/register --require step_definitions/",
+    "build": "npm run clean && npm run compile",
+    "clean": "rm -rf dist/",
+    "compile": "babel src/ -d dist/"
+  },
+  "cucumber": {
+    "require": [
+      "step_definitions/**/*.js"
+    ]
+  },
+  "keywords": [
+    "k6",
+    "cucumber",
+    "bdd",
+    "performance-testing",
+    "api-testing",
+    "load-testing",
+    "stress-testing",
+    "steps",
+    "test-automation"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Enyimiri Chetachi Paschal",
+  "license": "ISC",
+  "description": "Cucumber step definitions for running k6 performance tests.",
+  "devDependencies": {
+    "@babel/cli": "^7.27.0",
+    "@babel/core": "^7.26.10",
+    "@babel/preset-env": "^7.26.9",
+    "@cucumber/cucumber": "^11.2.0",
+    "@faker-js/faker": "^9.7.0",
+    "@types/k6": "^1.0.2",
+    "child_process": "^1.0.2",
+    "cucumber-html-reporter": "^6.0.0",
+    "dotenv": "^16.5.0",
+    "esbuild": "^0.25.3",
+    "form-data": "^4.0.2",
+    "k6": "^0.0.0",
+    "tsconfig-paths": "^4.2.0"
+  }
+}

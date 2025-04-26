@@ -1,0 +1,9 @@
+# .gitignore
+node_modules/
+dist/
+.env
+temp_k6_script*.js
+reports
+temp/
+tmp/
+.vscode/
