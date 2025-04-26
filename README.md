@@ -3,7 +3,6 @@
 <table align="center" style="margin-bottom:30px;"><tr><td align="center" width="9999" heigth="9999" >
  <img src="assets/paschal logo (2).png" alt="paschal Logo" style="margin-top:25px;" align="center"/>
 </td></tr></table>
-#
 
 [![npm version](https://img.shields.io/npm/v/k6-cucumber-steps.svg)](https://www.npmjs.com/package/k6-cucumber-steps)
 [![npm downloads](https://img.shields.io/npm/dt/k6-cucumber-steps.svg)](https://www.npmjs.com/package/k6-cucumber-steps)
