@@ -6,7 +6,7 @@
 
 [![npm version](https://img.shields.io/npm/v/k6-cucumber-steps.svg)](https://www.npmjs.com/package/k6-cucumber-steps)
 [![npm downloads](https://img.shields.io/npm/dt/k6-cucumber-steps.svg)](https://www.npmjs.com/package/k6-cucumber-steps)
-[![License](https://img.shields.io/npm/l/k6-cucumber-steps.svg)](./LICENSE)
+[![license](https://img.shields.io/npm/l/k6-cucumber-steps)](https://github.com/qaPaschalE/k6-cucumber-steps/blob/main/LICENSE)
 [![Cucumber](https://img.shields.io/badge/built%20with-Cucumber-3178c6.svg)](https://cucumber.io/)
 [![Node.js](https://img.shields.io/badge/node-%3E=18-green.svg)](https://nodejs.org/)
 

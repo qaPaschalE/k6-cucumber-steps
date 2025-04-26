@@ -39,7 +39,7 @@
   "engines": {
     "node": ">=18"
   },
-  "author": "Enyimiri Chetachi Paschal",
+  "author": "qaPaschalE",
   "license": "ISC",
   "description": "Cucumber step definitions for running k6 performance tests.",
   "devDependencies": {
