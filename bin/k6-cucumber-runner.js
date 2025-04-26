@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 require("dotenv").config();
@@ -34,7 +35,12 @@ const cucumberArgs = [
   "--require-module",
   "@babel/register",
   "--require",
-  path.resolve(__dirname, "../step-definitions"),
+  path.resolve(
+    process.cwd(),
+    "node_modules",
+    "k6-cucumber-steps",
+    "step_definitions"
+  ),
   "--format",
   "summary",
 ];
@@ -78,5 +84,3 @@ main().catch((err) => {
   console.error("An unexpected error occurred:", err.message);
   process.exit(1);
 });
-
-// No need to import the @cucumber/cucumber API directly anymore
