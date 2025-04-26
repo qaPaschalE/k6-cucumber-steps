@@ -67,6 +67,7 @@ export default function () {
             }, {
       headers: ${JSON.stringify(headers, null, 2)}
     });
+    console.log(\`Response Body for \${resolvedUrl${i}}: \${res${i}.body}\`);
     check(res${i}, {
       "status is 2xx": (r) => r.status >= 200 && r.status < 300
     });
@@ -82,6 +83,7 @@ export default function () {
         }, {
       headers: ${JSON.stringify(headers, null, 2)}
     });
+    console.log(\`Response Body for \${resolvedUrl}: \${res.body}\`);
     check(res, {
       "status is 2xx": (r) => r.status >= 200 && r.status < 300
     });

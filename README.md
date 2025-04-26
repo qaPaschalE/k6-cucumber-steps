@@ -1,5 +1,10 @@
 # k6-cucumber-steps 🥒🧪
 
+<table align="center" style="margin-bottom:30px;"><tr><td align="center" width="9999" heigth="9999 " >
+ <img src="assets/paschal logo (2).png" alt="paschal Logo" style="margin-top:25px;" align="center"/>
+
+#
+
 [![npm version](https://img.shields.io/npm/v/k6-cucumber-steps.svg)](https://www.npmjs.com/package/k6-cucumber-steps)
 [![npm downloads](https://img.shields.io/npm/dt/k6-cucumber-steps.svg)](https://www.npmjs.com/package/k6-cucumber-steps)
 [![License](https://img.shields.io/npm/l/k6-cucumber-steps.svg)](./LICENSE)
@@ -29,8 +34,6 @@ Run [k6](https://k6.io/) performance/load tests using [Cucumber](https://cucumbe
 npm install k6-cucumber-steps
 ```
 
-````
-
 ---
 
 ## 🚀 Usage
@@ -51,116 +54,109 @@ await runK6Feature("./features/example.feature");
 
 ---
 
-## 📂 Project Structure
+## Setup
 
-```
-k6-cucumber-steps/
-├── src/
-│   ├── core/          # Main runner and executor
-│   ├── steps/         # Step definitions
-│   ├── utils/         # Body resolver, faker, env utils
-│   └── templates/     # k6 template file
-├── features/          # Your .feature files
-├── payloads/          # Optional: external JSON payloads
-├── index.ts           # CLI/programmatic entry
-```
+1. **Environment Variables**: Create a `.env` file in your project root based on the provided `.env.example`:
 
----
+   ```env
+   BASE_URL=https://api.example.com
+   API_KEY=your_api_key
+   BEARER_TOKEN=your_bearer_token
+   BASIC_USER=your_basic_user
+   BASIC_PASS=your_basic_pass
+   ```
 
-## 🧪 Gherkin Examples
+2. **Feature Files**: Write your feature files using the provided step definitions.
 
-### ✅ Basic GET Request
+## Gherkin Examples
+
+Here’s how you can write a feature file using the provided step definitions:
+
+### Example 1: Test GET Endpoint with No Authentication
 
 ```gherkin
-Feature: Load test a public API
+Feature: API Performance Testing
 
-  Scenario: Simple GET call
-    Given the base URL is "https://jsonplaceholder.typicode.com"
-    And the endpoint is "/posts/1"
-    And the request method is "GET"
+  Scenario: Run load tests with dynamic GET requests
+    Given I have a k6 script for GET testing
     When I run the k6 script with the following configurations:
-      | virtual_users | duration |
-      | 10            | 5        |
+      | virtual_users | duration | http_req_failed | http_req_duration |
+      | 50            | 10       | rate<0.05       | p(95)<3000        |
+    And the following endpoint(s) is/are used:
+      """
+      /api/profile
+      https://reqres.in/api/users?page=2
+      """
+    And when the authentication type is "none"
+    Then the API should handle the GET request successfully
 ```
 
----
-
-### 📤 POST with JSON Body and Faker
+### Example 2: Test POST Endpoint with Bearer Token Authentication
 
 ```gherkin
-Feature: Create user via API
+Feature: API Performance Testing
 
-  Scenario: Send POST request
-    Given the base URL is "https://api.example.com"
-    And the endpoint is "/users"
-    And the request method is "POST"
-    And the request body is:
+  Scenario: Run load tests with dynamic POST requests
+    Given I have a k6 script for POST testing
+    When I run the k6 script with the following configurations:
+      | virtual_users | duration | http_req_failed | http_req_duration |
+      | 20            | 60       | rate<0.01       | p(95)<300         |
+    And the authentication type is "bearer_token"
+    And the following endpoint(s) is/are used:
+      """
+      /api/v1/users
+      """
+    And the following POST body is used for "/api/v1/users"
       """
       {
-        "email": "{{faker.internet.email}}",
-        "password": "Test@123"
+        "username": "{{username}}",
+        "email": "{{faker.internet.email}}"
       }
       """
-    And the request headers are:
-      | Header         | Value             |
-      | Content-Type   | application/json  |
-      | Authorization  | Bearer {{TOKEN}}  |
-    When I run the k6 script with the following configurations:
-      | virtual_users | duration |
-      | 50            | 10       |
+    Then the API should handle the POST request successfully
 ```
 
----
+## Step Definitions
 
-### 🧪 With Custom Headers and Query Params
+### Authentication Steps
 
 ```gherkin
-Feature: Test query and headers
-
-  Scenario: GET with headers and query params
-    Given the base URL is "https://api.example.com"
-    And the endpoint is "/products"
-    And the request method is "GET"
-    And the query params are:
-      | key   | value    |
-      | q     | gadgets  |
-    And the request headers are:
-      | Header       | Value            |
-      | x-api-key    | {{API_KEY}}      |
-      | Accept       | application/json |
-    When I run the k6 script with the following configurations:
-      | virtual_users | duration |
-      | 25            | 15       |
+When the authentication type is "api_key"
+When the authentication type is "bearer_token"
+When the authentication type is "basic"
+When the authentication type is "none"
 ```
 
----
-
-### 📊 Distributed Execution with Stages
+### Request Configuration Steps
 
 ```gherkin
-Feature: Spike test with k6 stages
-
-  Scenario: Gradual load increase
-    Given the base URL is "https://api.example.com"
-    And the endpoint is "/orders"
-    And the request method is "GET"
-    When I run the k6 script with the following configurations:
-      | stages                     |
-      | [{ "duration": "30s", "target": 20 }, { "duration": "1m", "target": 50 }] |
+Given I have a k6 script for {word} testing
+When I run the k6 script with the following configurations:
+When the request headers are:
+When the following endpoint(s) is/are used:
+When the following {word} body is used for {string}
 ```
 
----
+### Assertion Steps
 
-## 🔐 Environment Variables
-
-Use `{{VAR_NAME}}` syntax anywhere and define them in your `.env` file or system envs.
-
-```env
-API_KEY=abc123xyz
-TOKEN=eyJhbGciOiJIUzI1...
+```gherkin
+Then the API should handle the {word} request successfully
 ```
 
----
+## Test Results
+
+Below is an example of the Cucumber report generated after running the tests:
+
+![Cucumber Report](./assets/k6-cucumber-report.png)
+
+### Explanation of the Report
+
+- **All Scenarios**: Total number of scenarios executed.
+- **Passed Scenarios**: Number of scenarios that passed.
+- **Failed Scenarios**: Number of scenarios that failed.
+- **Metadata**: Information about the test environment (e.g., browser, platform).
+- **Feature Overview**: Summary of the feature being tested.
+- **Scenario Details**: Detailed steps and their execution status.
 
 ## 🧼 Temporary Files Clean-up
 
@@ -168,41 +164,16 @@ All generated k6 scripts and artifacts are cleaned automatically after test exec
 
 ---
 
-## 👨‍💻 Development
-
-```bash
-npm install
-npm run build
-npm link   # optional: test globally
-```
-
----
-
-## 📤 Publish
-
-1. Bump version in `package.json`
-2. Run:
-
-```bash
-npm publish --access public
-```
-
-Ensure `.npmignore` includes:
-
-```
-features/
-payloads/
-*.test.ts
-tsconfig.json
-```
-
----
-
 ## 📄 License
 
-MIT © [Your Name or Org]
+MIT License - [@qaPaschalE](https://github.com/qaPaschalE)
 
 ```
 
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+
 ```
-````

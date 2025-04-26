@@ -1,33 +1,35 @@
-name: K6 Load Test
+name: Node.js Package Workflow
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
-  load-test:
+  build:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    strategy:
+      matrix:
+        node-version: [lts/*]
 
-      - name: Setup Node.js
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
       - name: Install k6
         run: |
           sudo apt-get update
-          sudo apt-get install -y k6
-
-      - name: Run load test
-        run: |
-          node load-tests/features/step_definitions/load_test_steps.js
-          k6 run load-tests/temp/k6_script.js
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-          BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
+          sudo apt-get install -y --no-install-recommends k6
+      - name: Verify k6 Installation
+        run: k6 version
+      - name: Install Dependencies
+        run: npm install
+      - name: List Dependencies
+        run: npm list --all
+      - name: Run Load Tests
+        run: npm loadTest

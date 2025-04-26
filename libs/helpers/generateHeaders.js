@@ -2,9 +2,9 @@
  * @module generateHeaders
  * @description
  * This module generates HTTP headers for API requests based on the specified authentication type.
- * It supports API key, bearer token, and basic authentication.
+ * It supports API key, bearer token, basic authentication, and no authentication.
  * Generates HTTP headers based on the specified authentication type.
- * Supported auth types: api_key, bearer_token, basic.
+ * Supported auth types: api_key, bearer_token, basic, none.
  */
 module.exports = function generateHeaders(authType, env) {
   const headers = { "Content-Type": "application/json" };
@@ -18,6 +18,9 @@ module.exports = function generateHeaders(authType, env) {
       "base64"
     );
     headers["Authorization"] = `Basic ${base64}`;
+  } else if (authType === "none") {
+    // No additional headers for "no auth"
+    // Default headers (e.g., Content-Type) are still included
   } else {
     throw new Error(`Unsupported authentication type: ${authType}`);
   }

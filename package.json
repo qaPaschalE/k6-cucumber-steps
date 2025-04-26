@@ -1,5 +1,5 @@
 {
-  "name": "k6-cucumber",
+  "name": "k6-cucumber-steps",
   "version": "1.0.0",
   "main": "index.js",
   "repository": {
@@ -13,7 +13,7 @@
   "scripts": {
     "stress": "npx cucumber-js --format json:stress-results.json --tags @stress",
     "stress:report": "cucumber-html-reporter --jsonFile=stress-results.json --output=stress-report.html",
-    "load": "npx cucumber-js --format json:load-results.json --tags @load",
+    "loadTest": "npx cucumber-js --format json:reports/load-results.json --tags @loadTest",
     "load:report": "cucumber-html-reporter --jsonFile=load-results.json --output=load-report.html",
     "test": "cucumber-js features/ --require-module @babel/register --require step_definitions/",
     "build": "npm run clean && npm run compile",

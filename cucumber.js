@@ -9,10 +9,10 @@ const reporter = require("cucumber-html-reporter");
 module.exports = {
   default: {
     require: ["step_definitions/world.js", "step_definitions/*.js"],
-    paths: ["src/features/*.k6.feature"],
+    paths: ["src/examples/features/*.feature"],
     format: ["progress", "json:reports/load-results.json"],
     timeout: 60000,
-    tags: process.env.TAGS || "@load",
+    tags: process.env.TAGS || "@loadTest",
   },
 };
 

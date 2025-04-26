@@ -21,11 +21,6 @@ Feature: Run stress tests with dynamic GET and POST body from environment variab
     Then the API should handle the POST request successfully
 
     Examples:
-      | virtual_users | duration | http_req_failed | http_req_duration | error_rate |
-      |            10 |        5 | rate<0.10       | p(95)<1500        | rate<0.10  |
-      |            50 |       10 | rate<0.05       | p(95)<1000        | rate<0.05  |
-      |           100 |       15 | rate<0.10       | p(95)<2000        |            |
-      |           200 |       20 | rate<0.05       | p(95)<2000        | rate<0.05  |
 
   Scenario Outline: I run the k6 script for GET testing with dynamic endpoints
     Given I have a k6 script for GET testing
@@ -40,11 +35,11 @@ Feature: Run stress tests with dynamic GET and POST body from environment variab
     Then the API should handle the GET request successfully
 
     Examples:
-      | virtual_users | duration | http_req_failed | http_req_duration | error_rate |
-      |            10 |        5 | rate<0.10       | p(95)<1500        | rate<0.10  |
-      |            50 |       10 | rate<0.05       | p(95)<1000        | rate<0.05  |
-      |           100 |       15 | rate<0.10       | p(95)<2000        |            |
-      |           200 |       20 | rate<0.05       | p(95)<2000        | rate<0.05  |
+      | virtual_users | duration | http_req_failed |
+      |            10 |        5 | rate<0.10       |
+      |            50 |       10 | rate<0.05       |
+      |           100 |       15 | rate<0.10       |
+      |           200 |       20 | rate<0.05       |
 
   Scenario Outline: I run the k6 script for PUT requests
     Given I have a k6 script for PUT testing

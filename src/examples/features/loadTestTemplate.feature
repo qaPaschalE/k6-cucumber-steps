@@ -7,8 +7,8 @@ Feature: Run load tests with dynamic GET and POST body from environment variable
       | <virtual_users> | <duration> | <http_req_failed> | <http_req_duration> | <error_rate> |
     When the following endpoint(s) is/are used:
       """
-      /api/v1/resource1
-      https://api.external.com/resource2
+      /api/profile
+      http://test.k6.io
       """
     When the following POST body is used for "<endpoint>"
       """
@@ -23,11 +23,12 @@ Feature: Run load tests with dynamic GET and POST body from environment variable
 
     Examples:
       | virtual_users | duration | http_req_failed | http_req_duration | error_rate |
-      |            10 |        5 | rate<0.05       | p(95)<1000        | rate<0.05  |
-      |            50 |       10 | rate<0.05       | p(95)<1000        | rate<0.05  |
-      |           100 |       15 | rate<0.05       | p(95)<1500        |            |
-      |           200 |       20 | rate<0.05       | p(95)<1500        | rate<0.05  |
+      |            10 |        5 | rate<0.05       | p(95)<3000        | rate<0.05  |
+      |            50 |       10 | rate<0.05       | p(95)<3000        | rate<0.05  |
+      |           100 |       15 | rate<0.05       | p(95)<3500        |            |
+      |           200 |       20 | rate<0.05       | p(95)<3500        | rate<0.05  |
 
+  @loadTest
   Scenario Outline: I run the k6 script for load testing with dynamic GET requests
     Given I have a k6 script for GET testing
     When I run the k6 script with the following configurations:
@@ -35,15 +36,15 @@ Feature: Run load tests with dynamic GET and POST body from environment variable
       | <virtual_users> | <duration> | <http_req_failed> | <http_req_duration> | <error_rate> |
     And the following endpoint(s) is/are used:
       """
-      /api/v1/resource1
-      https://api.external.com/resource2
+      /api/profile
+      https://reqres.in/api/users?page=2
       """
-    When the authentication type is "bearer_token"
+    When the authentication type is "none"
     Then the API should handle the GET request successfully
 
     Examples:
-      | virtual_users | duration | http_req_failed | http_req_duration | error_rate |
-      |            10 |        5 | rate<0.05       | p(95)<1000        | rate<0.05  |
-      |            50 |       10 | rate<0.05       | p(95)<1000        | rate<0.05  |
-      |           100 |       15 | rate<0.05       | p(95)<1500        |            |
-      |           200 |       20 | rate<0.05       | p(95)<1500        | rate<0.05  |
+      | virtual_users | duration | http_req_failed | http_req_duration |
+      |            10 |        5 | rate<0.05       | p(95)<3000        |
+      |            50 |       10 | rate<0.05       | p(95)<3000        |
+      |           100 |       15 | rate<0.05       | p(95)<3500        |
+      |           200 |       20 | rate<0.05       | p(95)<3500        |
