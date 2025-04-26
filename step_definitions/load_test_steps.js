@@ -4,10 +4,10 @@ const { Given, When, Then } = require("@cucumber/cucumber");
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
-const resolveBody = require("../libs/helpers/resolveBody.js");
-const buildK6Script = require("../libs/helpers/buildK6Script.js");
-const generateHeaders = require("../libs/helpers/generateHeaders.js");
-const { generateK6Script, runK6Script } = require("../libs/utils/k6Runner.js");
+const resolveBody = require("../lib/helpers/resolveBody.js");
+const buildK6Script = require("../lib/helpers/buildK6Script.js");
+const generateHeaders = require("../lib/helpers/generateHeaders.js");
+const { generateK6Script, runK6Script } = require("../lib/utils/k6Runner.js");
 require("dotenv").config();
 
 // Validate thresholds (e.g., "rate<0.01")

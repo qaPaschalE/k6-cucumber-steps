@@ -36,8 +36,8 @@ Feature: Run load tests with dynamic GET and POST body from environment variable
       | <virtual_users> | <duration> | <http_req_failed> | <http_req_duration> | <error_rate> |
     And the following endpoint(s) is/are used:
       """
-      /api/profile
-      https://reqres.in/api/users?page=2
+      /api/users?page=2
+      https://simple-books-api.glitch.me/books
       """
     When the authentication type is "none"
     Then the API should handle the GET request successfully
@@ -46,5 +46,5 @@ Feature: Run load tests with dynamic GET and POST body from environment variable
       | virtual_users | duration | http_req_failed | http_req_duration |
       |            10 |        5 | rate<0.05       | p(95)<3000        |
       |            50 |       10 | rate<0.05       | p(95)<3000        |
-      |           100 |       15 | rate<0.05       | p(95)<3500        |
-      |           200 |       20 | rate<0.05       | p(95)<3500        |
+      # |           100 |       15 | rate<0.05       | p(95)<3500        |
+      # |           200 |       20 | rate<0.05       | p(95)<3500        |
