@@ -2,6 +2,14 @@
   "name": "k6-cucumber",
   "version": "1.0.0",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qaPaschalE/k6-cucumber-steps.git"
+  },
+  "bugs": {
+    "url": "https://github.com/qaPaschalE/k6-cucumber-steps/issues"
+  },
+  "homepage": "https://github.com/qaPaschalE/k6-cucumber-steps#readme",
   "scripts": {
     "stress": "npx cucumber-js --format json:stress-results.json --tags @stress",
     "stress:report": "cucumber-html-reporter --jsonFile=stress-results.json --output=stress-report.html",
