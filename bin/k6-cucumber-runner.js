@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 require("dotenv").config();
-
-// Use yargs for better argument parsing
 const argv = require("yargs")
   .usage("Usage: $0 run --feature <path> [options]")
   .option("feature", {
@@ -14,24 +11,19 @@ const argv = require("yargs")
     type: "string",
     demandOption: true,
   })
-  .option("tags", {
-    alias: "t",
-    describe:
-      "Cucumber tags to filter scenarios (e.g., '@smoke and not @integration')",
-    type: "string",
-  })
+  .option("tags", { alias: "t", describe: "Cucumber tags", type: "string" })
   .option("reporter", {
     alias: "r",
-    describe: "Generate HTML and JSON reports in the reports directory",
+    describe: "Generate reports",
     type: "boolean",
     default: false,
   })
   .help().argv;
 
 const featureFilePath = path.resolve(process.cwd(), argv.feature);
-const cucumberCommand = "npx"; // Changed to "npx"
+const cucumberCommand = "npx";
 const cucumberArgs = [
-  "cucumber-js", // Now cucumber-js is an argument to npx
+  "cucumber-js",
   featureFilePath,
   "--require-module",
   "@babel/register",
@@ -46,15 +38,15 @@ const cucumberArgs = [
   "summary",
 ];
 
-if (argv.tags) {
-  cucumberArgs.push("--tags", argv.tags);
-}
-
+if (argv.tags) cucumberArgs.push("--tags", argv.tags);
 if (argv.reporter) {
   const reportsDir = path.resolve(process.cwd(), "reports");
-  // Ensure reports directory will be created by cucumber-js if needed
-  cucumberArgs.push("--format", `json:${reportsDir}/load-results.json`);
-  cucumberArgs.push("--format", `html:${reportsDir}/load-results.html`);
+  cucumberArgs.push(
+    "--format",
+    `json:${reportsDir}/load-results.json`,
+    "--format",
+    `html:${reportsDir}/load-results.html`
+  );
 }
 
 async function main() {
@@ -63,22 +55,12 @@ async function main() {
 
   const cucumberProcess = spawn(cucumberCommand, cucumberArgs, {
     cwd: process.cwd(),
-    stdio: "inherit", // Forward stdout and stderr to the console
+    stdio: "inherit",
   });
 
   cucumberProcess.on("close", (code) => {
-    if (code !== 0) {
-      console.error(`Cucumber process exited with code ${code}`);
-      process.exit(code);
-    } else {
-      console.log(
-        "Cucumber tests finished successfully. Check k6 output for performance results (if any steps ran k6)."
-      );
-    }
+    process.exit(code);
   });
 }
 
-main().catch((err) => {
-  console.error("An unexpected error occurred:", err.message);
-  process.exit(1);
-});
+main().catch((err) => console.error(err));
