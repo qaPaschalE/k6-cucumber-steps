@@ -29,8 +29,9 @@ const argv = require("yargs")
   .help().argv;
 
 const featureFilePath = path.resolve(process.cwd(), argv.feature);
-const cucumberCommand = "cucumber-js";
+const cucumberCommand = "npx"; // Changed to "npx"
 const cucumberArgs = [
+  "cucumber-js", // Now cucumber-js is an argument to npx
   featureFilePath,
   "--require-module",
   "@babel/register",
@@ -57,11 +58,8 @@ if (argv.reporter) {
 }
 
 async function main() {
-  console.log(
-    `Running Cucumber using command: ${cucumberCommand} ${cucumberArgs.join(
-      " "
-    )}`
-  );
+  const fullCommand = `${cucumberCommand} ${cucumberArgs.join(" ")}`;
+  console.log(`Running Cucumber using command: ${fullCommand}`);
 
   const cucumberProcess = spawn(cucumberCommand, cucumberArgs, {
     cwd: process.cwd(),
