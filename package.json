@@ -25,6 +25,9 @@
       "step_definitions/**/*.js"
     ]
   },
+  "bin": {
+    "k6-cucumber-steps": "./bin/k6-cucumber-runner.js"
+  },
   "keywords": [
     "k6",
     "cucumber",
@@ -46,6 +49,7 @@
     "@babel/cli": "^7.27.0",
     "@babel/core": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
+    "@babel/register": "^7.25.9",
     "@cucumber/cucumber": "^11.2.0",
     "@faker-js/faker": "^9.7.0",
     "@types/k6": "^1.0.2",
@@ -56,5 +60,8 @@
     "form-data": "^4.0.2",
     "k6": "^0.0.0",
     "tsconfig-paths": "^4.2.0"
+  },
+  "dependencies": {
+    "yargs": "^17.7.2"
   }
 }

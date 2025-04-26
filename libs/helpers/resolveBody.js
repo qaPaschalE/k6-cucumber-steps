@@ -14,7 +14,8 @@ const faker = require("@faker-js/faker");
 
 module.exports = function resolveBody(template, env) {
   let result = template;
-
+  console.log("Resolving body template:", template);
+  console.log("Resolved body result:", result);
   // Replace env vars like {{username}}
   result = result.replace(/{{(\w+)}}/g, (_, key) => {
     if (!(key in env)) {
@@ -28,8 +29,10 @@ module.exports = function resolveBody(template, env) {
     const parts = methodPath.split(".");
     let fn = faker;
     for (const part of parts) {
-      fn = fn[part];
-      if (!fn) break;
+      fn = fn?.[part]; // Use optional chaining to avoid errors
+      if (!fn) {
+        throw new Error(`Invalid Faker template: {{faker.${methodPath}}}`);
+      }
     }
     if (typeof fn !== "function") {
       throw new Error(`Invalid Faker template: {{faker.${methodPath}}}`);
@@ -43,7 +46,11 @@ module.exports = function resolveBody(template, env) {
     if (!fs.existsSync(filePath)) {
       throw new Error(`Payload file not found: ${fileName}`);
     }
-    return JSON.stringify(JSON.parse(fs.readFileSync(filePath, "utf-8")));
+    try {
+      return JSON.stringify(JSON.parse(fs.readFileSync(filePath, "utf-8")));
+    } catch (error) {
+      throw new Error(`Failed to parse JSON file: ${fileName}`);
+    }
   });
 
   try {

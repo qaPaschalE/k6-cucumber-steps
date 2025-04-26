@@ -28,7 +28,7 @@
 
 module.exports = function buildK6Script(config) {
   const { method, endpoints, endpoint, body, headers, options } = config;
-
+  console.log("Generating k6 script with config:", config);
   // Ensure at least one of `endpoints` or `endpoint` is defined
   if (!endpoints?.length && !endpoint) {
     throw new Error(
