@@ -57,7 +57,7 @@ declare function When(
   ) => void
 ): void;
 declare function When(
-  pattern: "I set the following endpoint\\(s) used:",
+  pattern: "I set the following endpoints used:",
   implementation: (
     this: import("@cucumber/cucumber").World,
     docString: string
@@ -73,7 +73,7 @@ declare function When(
   ) => void
 ): void;
 declare function When(
-  pattern: "I set the authentication type is {string}",
+  pattern: "I set the authentication type to {string}",
   implementation: (
     this: import("@cucumber/cucumber").World,
     authType: string
