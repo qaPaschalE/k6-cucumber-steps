@@ -36,8 +36,8 @@ Feature: Run load tests with dynamic GET and POST body from environment variable
       | <virtual_users> | <duration> | <http_req_failed> | <http_req_duration> | <error_rate> |
     And the following endpoint(s) is/are used:
       """
-      /api/users?page=2
-      https://simple-books-api.glitch.me/books
+      /get?foo1=bar1&foo2=bar2
+      https://postman-echo.com/get?foo1=bar1&foo2=bar2
       """
     When the authentication type is "none"
     Then the API should handle the GET request successfully

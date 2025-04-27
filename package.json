@@ -51,6 +51,7 @@
     "@babel/preset-env": "^7.26.9",
     "@types/k6": "^1.0.2",
     "child_process": "^1.0.2",
+    "cucumber-console-formatter": "^1.0.0",
     "cucumber-html-reporter": "^6.0.0",
     "esbuild": "^0.25.3",
     "form-data": "^4.0.2",

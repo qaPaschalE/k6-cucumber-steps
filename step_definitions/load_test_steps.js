@@ -100,37 +100,6 @@ When("the authentication type is {string}", function (authType) {
   this.config.headers = generateHeaders(authType, process.env);
 });
 
-// Then(
-//   "the API should handle the {word} request successfully",
-//   { timeout: 60000 }, // Increase timeout to 60 seconds
-//   async function (method) {
-//     // Normalize both values to uppercase for comparison
-//     const expectedMethod = method.toUpperCase();
-//     const actualMethod = this.config.method.toUpperCase();
-
-//     if (actualMethod !== expectedMethod) {
-//       throw new Error(
-//         `Mismatched HTTP method: expected "${expectedMethod}", got "${actualMethod}"`
-//       );
-//     }
-
-//     try {
-//       // Generate the k6 script content
-//       const scriptContent = buildK6Script(this.config);
-
-//       // Generate the temporary k6 script file
-//       const scriptPath = generateK6Script(scriptContent);
-
-//       // Run the k6 script and capture the output
-//       const stdout = await runK6Script(scriptPath);
-//     } catch (error) {
-//       console.error("k6 execution failed:", error.message);
-//       console.error("k6 stderr:", error.stderr); // Log stderr for debugging
-//       throw new Error("k6 test execution failed");
-//     }
-//   }
-// );
-
 Then(
   "the API should handle the {word} request successfully",
   { timeout: 60000 },
@@ -147,12 +116,11 @@ Then(
     }
     try {
       const scriptContent = buildK6Script(this.config);
-      const scriptPath = generateK6Script(scriptContent);
+      const scriptPath = await generateK6Script(scriptContent);
       const stdout = await runK6Script(scriptPath);
     } catch (error) {
       console.error("k6 execution failed:", error.message);
       throw new Error("k6 test execution failed");
     }
-    console.log("Final configuration before k6 execution:", this.config);
   }
 );
