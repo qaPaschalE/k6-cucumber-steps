@@ -1,7 +1,7 @@
 Feature: Run load tests with dynamic GET and POST body from environment variables and JSON files
 
   Scenario Outline: I run the k6 script for load testing with dynamic POST body from environment variables and JSON files
-    Given I have a k6 script for POST testing
+    Given I set a k6 script for POST testing
     When I run the k6 script with the following configurations:
       | virtual_users   | duration   | http_req_failed   | http_req_duration   | error_rate   |
       | <virtual_users> | <duration> | <http_req_failed> | <http_req_duration> | <error_rate> |
@@ -23,10 +23,10 @@ Feature: Run load tests with dynamic GET and POST body from environment variable
 
     Examples:
       | virtual_users | duration | http_req_failed | http_req_duration | error_rate |
-      |            10 |        5 | rate<0.05       | p(95)<3000        | rate<0.05  |
-      |            50 |       10 | rate<0.05       | p(95)<3000        | rate<0.05  |
-      |           100 |       15 | rate<0.05       | p(95)<3500        |            |
-      |           200 |       20 | rate<0.05       | p(95)<3500        | rate<0.05  |
+      | 10            | 5        | rate<0.05       | p(95)<3000        | rate<0.05  |
+      | 50            | 10       | rate<0.05       | p(95)<3000        | rate<0.05  |
+      | 100           | 15       | rate<0.05       | p(95)<3500        |            |
+      | 200           | 20       | rate<0.05       | p(95)<3500        | rate<0.05  |
 
   @loadTest
   Scenario Outline: I run the k6 script for load testing with dynamic GET requests
@@ -44,7 +44,7 @@ Feature: Run load tests with dynamic GET and POST body from environment variable
 
     Examples:
       | virtual_users | duration | http_req_failed | http_req_duration |
-      |            10 |        5 | rate<0.05       | p(95)<3000        |
-      |            50 |       10 | rate<0.05       | p(95)<3000        |
-      # |           100 |       15 | rate<0.05       | p(95)<3500        |
-      # |           200 |       20 | rate<0.05       | p(95)<3500        |
+      | 10            | 5        | rate<0.05       | p(95)<3000        |
+      | 50            | 10       | rate<0.05       | p(95)<3000        |
+# |           100 |       15 | rate<0.05       | p(95)<3500        |
+# |           200 |       20 | rate<0.05       | p(95)<3500        |

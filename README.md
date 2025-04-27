@@ -33,39 +33,122 @@ Run [k6](https://k6.io/) performance/load tests using [Cucumber](https://cucumbe
 npm install k6-cucumber-steps
 ```
 
----
-
 ## 🚀 Usage
 
 ### CLI
 
 ```bash
-npx k6-cucumber-steps run --feature ./features/example.feature
+npx k6-cucumber-steps run [options]
 ```
 
-### Programmatic
+#### Options
 
-```ts
-import { runK6Feature } from "k6-cucumber-steps";
+The `run` command accepts the following options:
 
-await runK6Feature("./features/example.feature");
+- `-f, --feature <path>`: Path to the feature file to execute.
+- `-t, --tags <string>`: Cucumber tags to filter scenarios (e.g., `@smoke and not @regression`).
+- `-r, --reporter`: Generate HTML and JSON reports in the `reports` directory. This is a boolean flag, so just include `-r` or `--reporter` to enable it.
+
+### Example Usage with Options
+
+```bash
+npx k6-cucumber-steps run --feature ./features/my_feature.feature --tags "@load and not @wip" --reporter
 ```
 
 ---
 
-## Setup
+## 🛠️ Getting Started
 
-1. **Environment Variables**: Create a `.env` file in your project root based on the provided `.env.example`:
+Here's a step-by-step guide to using `k6-cucumber-steps` in your project:
 
-   ```env
-   BASE_URL=https://api.example.com
-   API_KEY=your_api_key
-   BEARER_TOKEN=your_bearer_token
-   BASIC_USER=your_basic_user
-   BASIC_PASS=your_basic_pass
-   ```
+**Prerequisites:**
 
-2. **Feature Files**: Write your feature files using the provided step definitions.
+1.  **Node.js and npm (or yarn):** Ensure you have Node.js and npm (or yarn) installed.
+2.  **k6:** Install k6 on your system following the instructions at [k6.io/docs/getting-started/installation/](https://www.google.com/search?q=https://k6.io/docs/getting-started/installation/).
+3.  **@cucumber/cucumber:** This package is required for using Cucumber.
+4.  **cucumber-html-reporter:** This package is needed if you intend to generate detailed HTML reports
+
+**Setup:**
+
+1.  **Create a new project:**
+
+    ```bash
+    mkdir my-performance-test
+    cd my-performance-test
+    npm init -y
+    # or
+    yarn init -y
+    ```
+
+2.  **Install dependencies:**
+
+    ```bash
+    npm install --save-dev @cucumber/cucumber k6 dotenv k6-cucumber-steps cucumber-html-reporter
+    # or
+    yarn add --dev @cucumber/cucumber k6 dotenv k6-cucumber-steps cucumber-html-reporter
+    ```
+
+3.  **Create `.env` file (optional):** Create a `.env` file in your project root for environment variables as described in the "Environment Variables" section below.
+
+4.  **Create `features` directory and feature files:**
+
+    ```bash
+    mkdir features
+    # Create your .feature files inside the features directory (e.g., example.feature)
+    ```
+
+5.  **Configure `cucumber.js`:**
+    Create a `cucumber.js` file at the root of your project with the following content:
+
+    ```javascript
+    // cucumber.js
+    require("dotenv").config();
+
+    module.exports = {
+      requireModule: ["@babel/register"], // If your features or local steps need transpilation
+      require: [
+        "./node_modules/k6-cucumber-steps/step_definitions/**/*.js", // Path to k6-cucumber-steps' step definitions
+        // You can add paths to your local step definitions here if needed
+      ],
+      format: [
+        "summary",
+        "json:reports/load-report.json", // For JSON report
+        "html:reports/report.html", // For HTML report (requires @cucumber/html-formatter)
+      ],
+      tags: process.env.TAGS,
+    };
+    ```
+
+**Running Tests:**
+
+From the root of your project, use the CLI command:
+
+```bash
+npx k6-cucumber-steps run
+```
+
+You can also specify a feature file or tags:
+
+```bash
+npx k6-cucumber-steps run --feature features/example.feature -t "@yourTag"
+```
+
+---
+
+## Setup (Detailed)
+
+1.  **Environment Variables**: Create a `.env` file in your project root based on the provided `.env.example`:
+
+    ```env
+    BASE_URL=[https://api.example.com](https://api.example.com)
+    API_KEY=your_api_key
+    BEARER_TOKEN=your_bearer_token
+    BASIC_USER=your_basic_user
+    BASIC_PASS=your_basic_pass
+    TAGS=@yourTag
+    ```
+
+2.  **Feature Files**: Write your feature files using the provided step definitions.
 
 ## Gherkin Examples
 
@@ -77,17 +160,17 @@ Here’s how you can write a feature file using the provided step definitions:
 Feature: API Performance Testing
 
   Scenario: Run load tests with dynamic GET requests
-    Given I have a k6 script for GET testing
-    When I run the k6 script with the following configurations:
+    Given I set a k6 script for GET testing
+    When I set to run the k6 script with the following configurations:
       | virtual_users | duration | http_req_failed | http_req_duration |
       | 50            | 10       | rate<0.05       | p(95)<3000        |
-    And the following endpoint(s) is/are used:
+    And I set the following endpoint(s) used:
       """
       /api/profile
-      https://reqres.in/api/users?page=2
+      [https://reqres.in/api/users?page=2](https://reqres.in/api/users?page=2)
       """
     And when the authentication type is "none"
-    Then the API should handle the GET request successfully
+    Then I see the API should handle the GET request successfully
 ```
 
 ### Example 2: Test POST Endpoint with Bearer Token Authentication
@@ -96,23 +179,23 @@ Feature: API Performance Testing
 Feature: API Performance Testing
 
   Scenario: Run load tests with dynamic POST requests
-    Given I have a k6 script for POST testing
-    When I run the k6 script with the following configurations:
+    Given I set a k6 script for POST testing
+    When I set to run the k6 script with the following configurations:
       | virtual_users | duration | http_req_failed | http_req_duration |
       | 20            | 60       | rate<0.01       | p(95)<300         |
     And the authentication type is "bearer_token"
-    And the following endpoint(s) is/are used:
+    And I set the following endpoint(s) used:
       """
       /api/v1/users
       """
-    And the following POST body is used for "/api/v1/users"
+    And I set the following POST body is used for "/api/v1/users"
       """
       {
         "username": "{{username}}",
         "email": "{{faker.internet.email}}"
       }
       """
-    Then the API should handle the POST request successfully
+    Then I see the API should handle the POST request successfully
 ```
 
 ## Step Definitions
@@ -120,33 +203,33 @@ Feature: API Performance Testing
 ### Authentication Steps
 
 ```gherkin
-When the authentication type is "api_key"
-When the authentication type is "bearer_token"
-When the authentication type is "basic"
-When the authentication type is "none"
+When I set the authentication type is "api_key"
+When I set the authentication type is "bearer_token"
+When I set the authentication type is "basic"
+When I set the authentication type is "none"
 ```
 
 ### Request Configuration Steps
 
 ```gherkin
-Given I have a k6 script for {word} testing
-When I run the k6 script with the following configurations:
-When the request headers are:
-When the following endpoint(s) is/are used:
-When the following {word} body is used for {string}
+Given I set a k6 script for {word} testing
+When I set to run the k6 script with the following configurations:
+When I set the request headers:
+When I set the following endpoint(s) used:
+When I set the following {word} body is used for {string}
 ```
 
 ### Assertion Steps
 
 ```gherkin
-Then the API should handle the {word} request successfully
+Then I see the API should handle the {word} request successfully
 ```
 
 ## Test Results
 
 Below is an example of the Cucumber report generated after running the tests:
-
-![Cucumber Report](./assets/k6-cucumber-report.png)
+<img src="assets/k6-cucumber-report.png" alt="Cucumber report generated after running the tests" width="60%" />
+<img src="assets/k6-cucumber-report2.png" alt="Cucumber report generated after running the tests" width="60%" />
 
 ### Explanation of the Report
 

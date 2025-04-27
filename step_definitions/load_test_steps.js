@@ -18,12 +18,12 @@ const validateThreshold = (threshold) => {
   }
 };
 
-Given("I have a k6 script for {word} testing", function (method) {
+Given("I set a k6 script for {word} testing", function (method) {
   this.config = { method: method.toUpperCase() };
 });
 
 When(
-  "I run the k6 script with the following configurations:",
+  "I set to run the k6 script with the following configurations:",
   function (dataTable) {
     const row = dataTable.hashes()[0];
 
@@ -68,7 +68,7 @@ When(
     }
   }
 );
-When("the request headers are:", function (dataTable) {
+When("I set the request headers:", function (dataTable) {
   const headers = {};
   dataTable.hashes().forEach(({ Header, Value }) => {
     headers[Header] = Value;
@@ -80,7 +80,7 @@ When("the request headers are:", function (dataTable) {
   };
 });
 
-When("the following endpoint\\(s) is\\/are used:", function (docString) {
+When("I set the following endpoint\\(s) used:", function (docString) {
   this.config.endpoints = docString
     .trim()
     .split("\n")
@@ -88,7 +88,7 @@ When("the following endpoint\\(s) is\\/are used:", function (docString) {
 });
 
 When(
-  "the following {word} body is used for {string}",
+  "I set the following {word} body is used for {string}",
   function (method, endpoint, docString) {
     this.config.method = method.toUpperCase();
     this.config.body = resolveBody(docString, process.env);
@@ -96,12 +96,12 @@ When(
   }
 );
 
-When("the authentication type is {string}", function (authType) {
+When("I set the authentication type is {string}", function (authType) {
   this.config.headers = generateHeaders(authType, process.env);
 });
 
 Then(
-  "the API should handle the {word} request successfully",
+  "I see the API should handle the {word} request successfully",
   { timeout: 60000 },
   async function (method) {
     if (!this.config || !this.config.method) {
