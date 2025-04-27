@@ -40,7 +40,7 @@ const cucumberArgs = [
   "--format",
   "summary",
   "--format",
-  "cucumber-console-formatter", // Add this line
+  "progress", // Add this line
 ];
 
 // Explicitly add tags, defaulting to '@loadTest' if no TAGS env variable is set
