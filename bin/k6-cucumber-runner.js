@@ -43,8 +43,7 @@ const cucumberArgs = [
   "progress", // Add this line
 ];
 
-// Explicitly add tags, defaulting to '@loadTest' if no TAGS env variable is set
-const tagsFromEnv = process.env.TAGS || "@loadTest";
+const tagsFromEnv = process.env.TAGS || " ";
 cucumberArgs.push("--tags", tagsFromEnv);
 
 if (argv.feature) {
