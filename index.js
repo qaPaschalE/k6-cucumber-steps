@@ -21,3 +21,4 @@ module.exports = {
   // Step definitions (optional, if users need direct access)
   stepDefinitions: require("./step_definitions/load_test_steps"),
 };
+export * from "./step_definitions/load_test_steps.js";
