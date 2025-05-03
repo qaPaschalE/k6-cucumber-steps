@@ -31,8 +31,10 @@ jobs:
         run: git commit -m "chore:Automated changes before versioning" || echo "No changes to commit"
       - name: Set new version as patch and create commit
         run: npm version patch
+      - name: Set npm registry
+        run: npm config set registry https://registry.npmjs.org/
       - name: Authenticate with npm
-        run: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+        run: npm set //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
       - name: Publish to npm
         run: npm publish
         env:
