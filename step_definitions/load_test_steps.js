@@ -174,23 +174,19 @@ Then(
       );
     }
     try {
-      // Generate the k6 script content
       const scriptContent = buildK6Script(this.config);
-
-      // Generate the temporary k6 script file with overwrite option
       const scriptPath = await generateK6Script(
         scriptContent,
         "load",
-        this.overwrite
+        process.env.K6_CUCUMBER_OVERWRITE === "true"
       );
-
-      // Run the k6 script with overwrite option
-      const stdout = await runK6Script(scriptPath, this.overwrite);
-
+      const stdout = await runK6Script(
+        scriptPath,
+        process.env.K6_CUCUMBER_OVERWRITE === "true"
+      );
       console.log(stdout);
     } catch (error) {
       console.error("k6 execution failed:", error.message);
-      console.error("k6 stderr:", error.stderr); // Log stderr for debugging
       throw new Error("k6 test execution failed");
     }
   }

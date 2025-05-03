@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
-console.log("-----------------------------------------");
-console.log("🚀 Starting k6-cucumber-steps execution...");
-console.log("-----------------------------------------");
-
 const path = require("path");
 const { spawn } = require("child_process");
+const fs = require("fs");
 require("dotenv").config();
-const argv = require("yargs")
+const yargs = require("yargs");
+
+const argv = yargs
   .usage("Usage: $0 run [options]")
   .option("feature", {
     alias: "f",
@@ -19,9 +18,14 @@ const argv = require("yargs")
     describe: "Cucumber tags to filter scenarios (e.g., @smoke)",
     type: "string",
   })
+  .option("configFile", {
+    alias: "c",
+    describe: "Custom cucumber config file name (default: cucumber.js)",
+    type: "string",
+  })
   .option("reporter", {
     alias: "r",
-    describe: "Generate HTML and JSON reports in the `reports` directory",
+    describe: "Generate HTML and JSON reports in the reports directory",
     type: "boolean",
     default: false,
   })
@@ -33,26 +37,25 @@ const argv = require("yargs")
   })
   .help().argv;
 
-// Base Cucumber command and arguments
-const cucumberCommand = "npx";
 const cucumberArgs = [
   "cucumber-js",
   "--require-module",
   "@babel/register",
   "--require",
-  path.resolve(
-    process.cwd(),
-    "node_modules",
-    "k6-cucumber-steps",
-    "step_definitions"
-  ),
-  "--require",
-  path.resolve(process.cwd(), "step_definitions"), // Include user's local step definitions
+  path.resolve(__dirname, "../step_definitions"),
   "--format",
   "summary",
   "--format",
-  "progress", // Progress bar format
+  "progress",
 ];
+
+// Handle dynamic config file name
+const configFileName =
+  "cucumber.js" || process.env.CUCUMBER_CONFIG_FILE || argv.configFile;
+const cucumberConfigPath = path.resolve(process.cwd(), configFileName);
+if (fs.existsSync(cucumberConfigPath)) {
+  cucumberArgs.push("--config", cucumberConfigPath);
+}
 
 // Add tags from CLI or environment variables
 if (argv.tags) {
@@ -70,7 +73,7 @@ if (argv.feature) {
 if (argv.reporter) {
   const reportsDir = path.resolve(process.cwd(), "reports");
   try {
-    require("fs").mkdirSync(reportsDir, { recursive: true }); // Ensure reports directory exists
+    fs.mkdirSync(reportsDir, { recursive: true });
   } catch (err) {
     console.error(`Failed to create reports directory: ${err.message}`);
     process.exit(1);
@@ -83,36 +86,19 @@ if (argv.reporter) {
   );
 }
 
-/**
- * Main function to execute the Cucumber process.
- */
-async function main() {
-  try {
-    const cucumberProcess = spawn(cucumberCommand, cucumberArgs, {
-      cwd: process.cwd(),
-      stdio: "inherit", // Inherit stdout/stderr for real-time logging
-      env: {
-        ...process.env,
-        K6_CUCUMBER_OVERWRITE: argv.overwrite, // Pass overwrite flag to environment
-      },
-    });
+const cucumberProcess = spawn("npx", cucumberArgs, {
+  stdio: "inherit",
+  env: {
+    ...process.env,
+    K6_CUCUMBER_OVERWRITE: argv.overwrite ? "true" : "false",
+  },
+});
 
-    cucumberProcess.on("close", (code) => {
-      if (code === 0) {
-        console.log("-----------------------------------------");
-        console.log("✅ k6-cucumber-steps execution completed successfully.");
-        console.log("-----------------------------------------");
-      } else {
-        console.error("-----------------------------------------");
-        console.error("❌ k6-cucumber-steps execution failed.");
-        console.error("-----------------------------------------");
-      }
-      process.exit(code);
-    });
-  } catch (error) {
-    console.error("An unexpected error occurred:", error.message);
-    process.exit(1);
+cucumberProcess.on("close", (code) => {
+  if (code === 0) {
+    console.log("✅ k6-cucumber-steps execution completed successfully.");
+  } else {
+    console.error("❌ k6-cucumber-steps execution failed.");
   }
-}
-
-main().catch((err) => console.error(err));
+  process.exit(code);
+});
