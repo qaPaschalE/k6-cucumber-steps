@@ -23,14 +23,16 @@ jobs:
         run: npm install
       - name: Configure Git for Commit
         run: |
-          git config --global user.email "paschal.enyimiri@gmail.com"
-          git config --global user.name "Paschal Enyimiri"
+          git config --global user.email "your-email@example.com"
+          git config --global user.name "Your GitHub Action Bot"
       - name: Add changes
         run: git add .
       - name: Commit changes
         run: git commit -m "chore:Automated changes before versioning" || echo "No changes to commit"
       - name: Set new version as patch and create commit
         run: npm version patch
+      - name: Authenticate with npm
+        run: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
       - name: Publish to npm
         run: npm publish
         env:
