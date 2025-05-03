@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 
-console.log("-----------------------------------------");
-console.log("🚀 Starting k6-cucumber-steps execution...");
-console.log("-----------------------------------------");
-
 const path = require("path");
-const { spawn } = require("child_process");
 const fs = require("fs");
-require("dotenv").config();
+const { spawn } = require("child_process");
 const yargs = require("yargs");
+require("dotenv").config();
 
-// Parse CLI arguments
+// 🚀 Welcome Message
+console.log(`
+  -----------------------------------------
+  🚀 Starting k6-cucumber-steps execution...
+  -----------------------------------------
+`);
+
 const argv = yargs
   .usage("Usage: $0 run [options]")
   .option("feature", {
@@ -20,83 +22,140 @@ const argv = yargs
   })
   .option("tags", {
     alias: "t",
-    describe: "Cucumber tags to filter scenarios (e.g., @smoke)",
+    describe: "Cucumber tags to filter scenarios",
     type: "string",
   })
   .option("reporter", {
     alias: "r",
-    describe: "Generate HTML and JSON reports in the reports directory",
+    describe: "Enable HTML and JSON reports",
     type: "boolean",
     default: false,
   })
   .option("overwrite", {
     alias: "o",
-    describe: "Overwrite existing reports instead of appending them",
+    describe: "Overwrite existing reports",
     type: "boolean",
     default: false,
   })
+  .option("configFile", {
+    alias: "c",
+    describe: "Custom cucumber config file",
+    type: "string",
+  })
   .help().argv;
 
-// Base Cucumber command and arguments
-const cucumberArgs = [
-  "cucumber-js",
-  "--require-module",
-  "@babel/register",
-  "--require",
-  path.resolve(__dirname, "../step_definitions"),
-  "--format",
-  "summary",
-  "--format",
-  "progress", // Progress bar format
-];
+const cucumberArgs = ["cucumber-js"];
 
-// Add tags from CLI or environment variables
-if (argv.tags) {
-  cucumberArgs.push("--tags", argv.tags);
-} else if (process.env.TAGS) {
-  cucumberArgs.push("--tags", process.env.TAGS);
-}
+const configFileName =
+  argv.configFile || process.env.CUCUMBER_CONFIG_FILE || "cucumber.js";
+const configFilePath = path.resolve(process.cwd(), configFileName);
 
-// Add feature file if provided
-if (argv.feature) {
-  cucumberArgs.push(path.resolve(process.cwd(), argv.feature));
-}
+console.log(`🔍 Looking for config file: ${configFileName}`);
+console.log(`📁 Resolved config file path: ${configFilePath}`);
 
-// Add reporting options if enabled
-if (argv.reporter) {
-  const reportsDir = path.resolve(process.cwd(), "reports");
+let configOptions = {};
+if (fs.existsSync(configFilePath)) {
+  console.log("✅ Config file found, including in cucumber arguments...");
+  cucumberArgs.push("--config", configFileName);
+
   try {
-    fs.mkdirSync(reportsDir, { recursive: true }); // Ensure reports directory exists
+    const loadedConfig = require(configFilePath);
+    configOptions = loadedConfig.default || loadedConfig;
   } catch (err) {
-    console.error(`Failed to create reports directory: ${err.message}`);
-    process.exit(1);
+    console.warn("⚠️  Failed to load options from config file.");
   }
-  cucumberArgs.push(
-    "--format",
-    `json:${path.join(reportsDir, "load-results.json")}`,
-    "--format",
-    `html:${path.join(reportsDir, "load-results.html")}`
-  );
+} else {
+  console.warn("⚠️  Config file not found, skipping...");
 }
 
-// Execute the Cucumber process
+// Tags
+const tags = argv.tags || process.env.TAGS || configOptions.tags;
+if (tags) {
+  cucumberArgs.push("--tags", tags);
+}
+
+// Feature file(s)
+const feature = argv.feature || process.env.FEATURE_PATH;
+if (feature) {
+  cucumberArgs.push(path.resolve(process.cwd(), feature));
+} else if (configOptions.paths && configOptions.paths.length > 0) {
+  cucumberArgs.push(...configOptions.paths);
+}
+
+// Reporting
+const reportsDir = path.join(process.cwd(), "reports");
+const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+const shouldGenerateReports = argv.reporter || configOptions.reporter || false;
+
+const shouldOverwrite =
+  argv.overwrite ||
+  process.env.K6_CUCUMBER_OVERWRITE === "true" ||
+  configOptions.overwrite === true;
+
+// Build base names from feature file(s)
+let baseNames = [];
+
+if (feature) {
+  baseNames = [path.basename(feature, path.extname(feature))];
+} else if (configOptions.paths && configOptions.paths.length > 0) {
+  baseNames = configOptions.paths.map((p) => path.basename(p, path.extname(p)));
+} else {
+  baseNames = ["load-results"];
+}
+
+// Generate report paths
+const reportPaths = baseNames.map((base) => {
+  const jsonName = shouldOverwrite
+    ? `${base}.json`
+    : `${base}-${timestamp}.json`;
+  const htmlName = shouldOverwrite
+    ? `${base}.html`
+    : `${base}-${timestamp}.html`;
+
+  return {
+    json: path.join(reportsDir, jsonName),
+    html: path.join(reportsDir, htmlName),
+  };
+});
+
+// Inject report formats into cucumber arguments
+if (shouldGenerateReports) {
+  fs.mkdirSync(reportsDir, { recursive: true });
+
+  cucumberArgs.push("--format", "summary");
+
+  reportPaths.forEach(({ json, html }) => {
+    cucumberArgs.push("--format", `json:${json}`);
+    cucumberArgs.push("--format", `html:${html}`);
+  });
+}
+
+console.log("📝 Reporter Enabled:", shouldGenerateReports);
+console.log("📝 Overwrite Enabled:", shouldOverwrite);
+
+console.log("\n▶️ Final arguments passed to cucumber-js:");
+console.log(["npx", ...cucumberArgs].join(" ") + "\n");
+
 const cucumberProcess = spawn("npx", cucumberArgs, {
   stdio: "inherit",
   env: {
     ...process.env,
-    K6_CUCUMBER_OVERWRITE: argv.overwrite ? "true" : "false",
+    K6_CUCUMBER_OVERWRITE: shouldOverwrite ? "true" : "false",
+    TAGS: tags,
+    FEATURE_PATH: feature,
+    REPORT_JSON_PATH: reportPaths[0]?.json,
+    REPORT_HTML_PATH: reportPaths[0]?.html,
   },
 });
 
 cucumberProcess.on("close", (code) => {
+  console.log(`\n-----------------------------------------`);
   if (code === 0) {
-    console.log("-----------------------------------------");
     console.log("✅ k6-cucumber-steps execution completed successfully.");
-    console.log("-----------------------------------------");
   } else {
-    console.error("-----------------------------------------");
     console.error("❌ k6-cucumber-steps execution failed.");
-    console.error("-----------------------------------------");
   }
+  console.log(`-----------------------------------------\n`);
   process.exit(code);
 });

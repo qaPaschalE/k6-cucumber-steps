@@ -110,17 +110,17 @@ Here's a step-by-step guide to using `k6-cucumber-steps` in your project:
     Create a `cucumber.js` file at the root of your project with the following content:
 
     ```javascript
-    // cucumber.js
-    require("dotenv").config();
+    // cucumber.js as default name but you can optionally give it any name of choice
 
     module.exports = {
       require: [
         // You can add paths to your local step definitions here if needed
       ],
+      reporter:true // To provide HTML and JSON report
       format: [
         "summary",
         "json:reports/load-report.json", // For JSON report
-        "html:reports/report.html", // For HTML report (requires @cucumber/html-formatter)
+        "html:reports/report.html", // For HTML report
       ],
       tags: process.env.TAGS,
       overwrite: false, // Default to not overwrite the report file
@@ -129,16 +129,16 @@ Here's a step-by-step guide to using `k6-cucumber-steps` in your project:
 
 **Running Tests:**
 
-From the root of your project, use the CLI command:
+From the root of your project, use the CLI command for default config:
 
 ```bash
 npx k6-cucumber-steps run
 ```
 
-You can also specify a feature file or tags:
+You can also specify a configFile:
 
 ```bash
-npx k6-cucumber-steps run --feature features/example.feature -t "@yourTag"
+npx k6-cucumber-steps run --configFile cucumber.prod.js
 ```
 
 ---

@@ -1,15 +1,14 @@
-// cucumber.js
-
 module.exports = {
-  require: ["./step_definitions/**/*.js"],
-  format: [
-    "summary",
-    "json:reports/load-report.json",
-    "html:reports/report.html",
-  ],
-  // Specify the path to your features folder here
-  paths: ["./features/loadTestTemplate.feature"],
-  tags: "@loadTest", // Default tag for load tests
-  overwrite: false,
-  reporter: true,
+  default: {
+    require: ["./step_definitions/**/*.js"],
+    format: [
+      "summary",
+      "json:./src/examples/reports/load-report.json",
+      "html:./src/examples/reports/report.html",
+    ],
+    paths: ["./src/examples/features/loadTestTemplate.feature"],
+    tags: process.env.TAGS,
+    overwrite: true,
+    reporter: true,
+  },
 };
