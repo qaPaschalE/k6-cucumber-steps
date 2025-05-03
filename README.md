@@ -11,7 +11,7 @@
 [![Cucumber](https://img.shields.io/badge/built%20with-Cucumber-3178c6.svg)](https://cucumber.io/)
 [![Node.js](https://img.shields.io/badge/node-%3E=18-green.svg)](https://nodejs.org/)
 [![Sponsor](https://img.shields.io/github/sponsors/qaPaschalE?style=social)](https://github.com/sponsors/qaPaschalE)
-[![Build Status](https://github.com/qap/k6-cucumber-steps/actions/workflows/k6-load-test.yml/badge.svg)](https://github.com/qaPaschalE/k6-cucumber-steps/actions/workflows/k6-load-test.yml)
+[![Build Status](https://github.com/qaPaschalE/k6-cucumber-steps/actions/workflows/k6-load-test.yml/badge.svg)](https://github.com/aPaschalE/k6-cucumber-steps/actions/workflows/k6-load-test.yml)
 
 Run [k6](https://k6.io/) performance/load tests using [Cucumber](https://cucumber.io/) BDD syntax with ease.
 
