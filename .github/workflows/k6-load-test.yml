@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          registry-url: "https://registry.npmjs.org" # Add this line
+          registry-url: "https://registry.npmjs.org"
       - name: Install Dependencies
         run: npm install
       - name: Configure Git for Commit
@@ -32,6 +32,8 @@ jobs:
         run: git commit -m "chore:Automated changes before versioning" || echo "No changes to commit"
       - name: Set new version as patch and create commit
         run: npm version patch
+      - name: Push changes
+        run: git push --follow-tags
       - name: Publish to npm
         run: npm publish
         env:
