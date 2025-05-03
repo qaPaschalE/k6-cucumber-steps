@@ -1,0 +1,1 @@
+{"version":3,"file":"types.js","sourceRoot":"","sources":["../../src/paths/types.ts"],"names":[],"mappings":"","sourcesContent":["export interface IResolvedPaths {\n  unexpandedSourcePaths: string[]\n  sourcePaths: string[]\n  requirePaths: string[]\n  importPaths: string[]\n}\n"]}

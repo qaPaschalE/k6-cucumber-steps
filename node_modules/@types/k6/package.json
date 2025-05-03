@@ -1,0 +1,75 @@
+{
+    "name": "@types/k6",
+    "version": "1.0.2",
+    "description": "TypeScript definitions for k6",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/k6",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Mihail Stoykov",
+            "githubUsername": "MStoykov",
+            "url": "https://github.com/MStoykov"
+        },
+        {
+            "name": "Ivan",
+            "githubUsername": "codebien",
+            "url": "https://github.com/codebien"
+        },
+        {
+            "name": "Théo Crevon",
+            "githubUsername": "oleiade",
+            "url": "https://github.com/oleiade"
+        },
+        {
+            "name": "Ankur Agarwal",
+            "githubUsername": "ankur22",
+            "url": "https://github.com/ankur22"
+        },
+        {
+            "name": "İnanç Gümüş",
+            "githubUsername": "inancgumus",
+            "url": "https://github.com/inancgumus"
+        },
+        {
+            "name": "Joan López de la Franca Beltran",
+            "githubUsername": "joanlopez",
+            "url": "https://github.com/joanlopez"
+        }
+    ],
+    "type": "module",
+    "main": "",
+    "types": "index.d.ts",
+    "exports": {
+        ".": "./index.d.ts",
+        "./options": "./options/index.d.ts",
+        "./ws": "./ws/index.d.ts",
+        "./http": "./http/index.d.ts",
+        "./net/grpc": "./net/grpc/index.d.ts",
+        "./html": "./html/index.d.ts",
+        "./metrics": "./metrics/index.d.ts",
+        "./timers": "./timers/index.d.ts",
+        "./execution": "./execution/index.d.ts",
+        "./encoding": "./encoding/index.d.ts",
+        "./data": "./data/index.d.ts",
+        "./secrets": "./secrets/index.d.ts",
+        "./crypto": "./crypto/index.d.ts",
+        "./browser": "./browser/index.d.ts",
+        "./experimental/csv": "./experimental/csv/index.d.ts",
+        "./experimental/fs": "./experimental/fs/index.d.ts",
+        "./experimental/redis": "./experimental/redis/index.d.ts",
+        "./experimental/webcrypto": "./experimental/webcrypto/index.d.ts",
+        "./experimental/streams": "./experimental/streams/index.d.ts",
+        "./experimental/websockets": "./experimental/websockets/index.d.ts",
+        "./package.json": "./package.json"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/k6"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "peerDependencies": {},
+    "typesPublisherContentHash": "045993e4d1c36f697246c0e423cfa9e945a92ed258845d5a09fc31aaca20c23c",
+    "typeScriptVersion": "5.0"
+}
