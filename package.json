@@ -10,6 +10,10 @@
   "bugs": {
     "url": "https://github.com/qaPaschalE/k6-cucumber-steps/issues"
   },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/qaPaschalE"
+  },
   "homepage": "https://github.com/qaPaschalE/k6-cucumber-steps#readme",
   "scripts": {
     "stress": "npx cucumber-js --format json:stress-results.json --tags @stress",

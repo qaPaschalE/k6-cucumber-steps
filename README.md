@@ -9,6 +9,7 @@
 [![license](https://img.shields.io/npm/l/k6-cucumber-steps)](https://github.com/qaPaschalE/k6-cucumber-steps/blob/main/LICENSE)
 [![Cucumber](https://img.shields.io/badge/built%20with-Cucumber-3178c6.svg)](https://cucumber.io/)
 [![Node.js](https://img.shields.io/badge/node-%3E=18-green.svg)](https://nodejs.org/)
+[![Sponsor](https://img.shields.io/github/sponsors/qaPaschalE?style=social)](https://github.com/sponsors/qaPaschalE)
 
 Run [k6](https://k6.io/) performance/load tests using [Cucumber](https://cucumber.io/) BDD syntax with ease.
 
@@ -65,8 +66,8 @@ Here's a step-by-step guide to using `k6-cucumber-steps` in your project:
 
 1.  **Node.js and npm (or yarn):** Ensure you have Node.js and npm (or yarn) installed.
 2.  **k6:** Install k6 on your system following the instructions at [k6.io/docs/getting-started/installation/](https://www.google.com/search?q=https://k6.io/docs/getting-started/installation/).
-3.  **@cucumber/cucumber:** This package is required for using Cucumber.
-4.  **cucumber-html-reporter:** This package is needed if you intend to generate detailed HTML reports
+3.  **@cucumber/cucumber:(optional)** This package is required for using Cucumber.
+4.  **cucumber-html-reporter:(optional)** This package is needed if you intend to generate detailed HTML reports
 
 **Setup:**
 
@@ -105,9 +106,7 @@ Here's a step-by-step guide to using `k6-cucumber-steps` in your project:
     require("dotenv").config();
 
     module.exports = {
-      requireModule: ["@babel/register"], // If your features or local steps need transpilation
       require: [
-        "./node_modules/k6-cucumber-steps/step_definitions/**/*.js", // Path to k6-cucumber-steps' step definitions
         // You can add paths to your local step definitions here if needed
       ],
       format: [
@@ -245,6 +244,10 @@ Below is an example of the Cucumber report generated after running the tests:
 All generated k6 scripts and artifacts are cleaned automatically after test execution.
 
 ---
+
+## 💖 Support
+
+If you find this package useful, consider [sponsoring me on GitHub](https://github.com/sponsors/qaPaschalE). Your support helps me maintain and improve this project!
 
 ## 📄 License
 
