@@ -19,13 +19,19 @@ Run [k6](https://k6.io/) performance/load tests using [Cucumber](https://cucumbe
 ## ✨ Features
 
 - ✅ Cucumber + Gherkin for writing k6 tests
+  to generate JSON and HTML reports.
+- ✅ Flexible configuration through Cucumber data tables.
 - ✅ Support for JSON body parsing and escaping
-- ✅ Faker support (`{{faker.name.firstName}}`)
+- ✅ Dynamic request body generation using environment variables, Faker templates, and JSON file includes.
 - ✅ `.env` + `K6.env`-style variable resolution (`{{API_KEY}}`)
 - ✅ Support for headers, query params, stages
+- ✅ Supports multiple authentication types: API key, Bearer token, Basic Auth, and No Auth.
+
 - ✅ Clean-up of temporary k6 files after execution
 - ✅ Built-in support for **distributed load testing** with stages
 - ✅ TypeScript-first 🧡
+- ✅ **Optional report overwriting**: Use the `overwrite` option to control whether reports are overwritten or appended.
+- ✅ **Generate detailed reports**: Use the `--reporter` flag
 
 ---
 
@@ -49,7 +55,8 @@ The `run` command accepts the following options:
 
 - `-f, --feature <path>`: Path to the feature file to execute.
 - `-t, --tags <string>`: Cucumber tags to filter scenarios (e.g., `@smoke and not @regression`).
-- `-r, --reporter`: Generate HTML and JSON reports in the `reports` directory. This is a boolean flag, so just include `-r` or `--reporter` to enable it.
+- `-r, --reporter`: Generate HTML and JSON reports in the `reports` directory. This is a boolean flag, so just include `-r, --reporter` to enable it.
+- `-o, --overwrite`: Overwrite existing reports instead of appending them.
 
 ### Example Usage with Options
 
@@ -116,6 +123,7 @@ Here's a step-by-step guide to using `k6-cucumber-steps` in your project:
         "html:reports/report.html", // For HTML report (requires @cucumber/html-formatter)
       ],
       tags: process.env.TAGS,
+      overwrite: false, // Default to not overwrite the report file
     };
     ```
 
