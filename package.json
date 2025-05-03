@@ -1,6 +1,6 @@
 {
   "name": "k6-cucumber-steps",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "main": "index.js",
   "license": "MIT",
   "repository": {
