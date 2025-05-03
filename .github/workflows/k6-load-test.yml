@@ -1,13 +1,11 @@
-name: Node.js Package Workflow
+name: Node.js Package Release
 
 on:
   push:
     branches: ["main"]
-  pull_request:
-    branches: ["main"]
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
 
     strategy:
@@ -21,15 +19,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      - name: Install k6
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends k6
-      - name: Verify k6 Installation
-        run: k6 version
       - name: Install Dependencies
         run: npm install
-      - name: List Dependencies
-        run: npm list --all
-      - name: Run Load Tests
-        run: npm loadTest
+      - name: Set new version as patch and create commit
+        run: npm version patch
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
