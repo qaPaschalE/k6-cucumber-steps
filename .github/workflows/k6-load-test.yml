@@ -33,6 +33,8 @@ jobs:
         run: git commit -m "chore:Automated changes before versioning" || echo "No changes to commit"
       - name: Set new version as patch and create commit
         run: npm version patch
+      - name: Check new version
+        run: echo "New version is $(npm pkg get version)"
       - name: Push changes
         run: git push --follow-tags
       - name: Publish to npm
