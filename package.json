@@ -31,7 +31,7 @@
     ]
   },
   "bin": {
-    "k6-cucumber-steps": "./bin/k6-cucumber-runner.js"
+    "k6-cucumber-steps": "./bin/k6-cucumber-steps.js"
   },
   "keywords": [
     "k6",
