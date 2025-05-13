@@ -122,6 +122,7 @@ Here's a step-by-step guide to using `k6-cucumber-steps` in your project:
         "json:reports/load-report.json", // For JSON report
         "html:reports/report.html", // For HTML report
       ],
+      paths: ["./features/*.feature"],
       tags: process.env.TAGS,
       overwrite: false, // Default to not overwrite the report file
     };
@@ -172,12 +173,12 @@ Feature: API Performance Testing
     When I set to run the k6 script with the following configurations:
       | virtual_users | duration | http_req_failed | http_req_duration |
       | 50            | 10       | rate<0.05       | p(95)<3000        |
-    And I set the following endpoint(s) used:
+    And I set the following endpoints used:
       """
       /api/profile
       [https://reqres.in/api/users?page=2](https://reqres.in/api/users?page=2)
       """
-    And when the authentication type is "none"
+    And I set the authentication type to "none"
     Then I see the API should handle the GET request successfully
 ```
 
@@ -190,9 +191,9 @@ Feature: API Performance Testing
     Given I set a k6 script for POST testing
     When I set to run the k6 script with the following configurations:
       | virtual_users | duration | http_req_failed | http_req_duration |
-      | 20            | 60       | rate<0.01       | p(95)<300         |
-    And the authentication type is "bearer_token"
-    And I set the following endpoint(s) used:
+      |            20 |       60 | rate<0.01       | p(95)<300         |
+    When I set the authentication type to "bearer_token"
+    And I set the following endpoints used:
       """
       /api/v1/users
       """
@@ -204,6 +205,7 @@ Feature: API Performance Testing
       }
       """
     Then I see the API should handle the POST request successfully
+
 ```
 
 ## Step Definitions
@@ -211,10 +213,10 @@ Feature: API Performance Testing
 ### Authentication Steps
 
 ```gherkin
-When I set the authentication type is "api_key"
-When I set the authentication type is "bearer_token"
-When I set the authentication type is "basic"
-When I set the authentication type is "none"
+When I set the authentication type to "api_key"
+When I set the authentication type to "bearer_token"
+When I set the authentication type to "basic"
+When I set the authentication type to "none"
 ```
 
 ### Request Configuration Steps
@@ -223,7 +225,7 @@ When I set the authentication type is "none"
 Given I set a k6 script for {word} testing
 When I set to run the k6 script with the following configurations:
 When I set the request headers:
-When I set the following endpoint(s) used:
+When I set the following endpoints used:
 When I set the following {word} body is used for {string}
 ```
 

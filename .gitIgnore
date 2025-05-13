@@ -6,5 +6,4 @@ temp_k6_script*.js
 reports
 temp/
 tmp/
-.vscode/
 .DS_Store

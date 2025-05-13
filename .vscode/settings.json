@@ -1,0 +1,12 @@
+{
+  "cucumber.features": [
+    "src/features/*.feature",
+    "src/features/**/*.feature",
+    "src/features/**/*.k6.feature",
+    "src/features/template/*.feature"
+  ],
+  "cucumber.glue": [
+    "step_definitions/*.js",
+    "src/features/stepDefinitions/*.js"
+  ]
+}
