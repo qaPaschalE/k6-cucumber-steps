@@ -156,9 +156,12 @@ When(
       );
     }
 
-    const payloadPath = path.resolve(__dirname, "../../payloads", fileName);
+    const basePayloadPath =
+      this.parameters?.payloadPath || path.resolve(__dirname, "../../payloads");
+    const payloadPath = path.resolve(basePayloadPath, fileName);
+
     if (!fs.existsSync(payloadPath)) {
-      throw new Error(`Payload file not found: ${fileName}`);
+      throw new Error(`Payload file not found: ${payloadPath}`);
     }
 
     const rawTemplate = fs.readFileSync(payloadPath, "utf-8");
@@ -185,6 +188,7 @@ When(
     };
   }
 );
+
 /**
  * @param {string} authType - Authentication type (api_key, bearer_token, basic, none).
  * @example
@@ -227,10 +231,12 @@ Then(
 When(
   "I login via POST to {string} with payload from {string}",
   async function (endpoint, fileName) {
-    const payloadPath = path.resolve(__dirname, "../../payloads", fileName);
+    const basePayloadPath =
+      this.parameters?.payloadPath || path.resolve(__dirname, "../../payloads");
+    const payloadPath = path.resolve(basePayloadPath, fileName);
 
     if (!fs.existsSync(payloadPath)) {
-      throw new Error(`Payload file not found: ${fileName}`);
+      throw new Error(`Payload file not found: ${payloadPath}`);
     }
 
     const rawTemplate = fs.readFileSync(payloadPath, "utf-8");

@@ -8,6 +8,9 @@ module.exports = {
     ],
     paths: ["./src/examples/features/loadTestTemplate.feature"],
     tags: process.env.TAGS,
+    worldParameters: {
+      payloadPath: "apps/qa/performance/payloads",
+    },
     overwrite: true,
     reporter: true,
   },

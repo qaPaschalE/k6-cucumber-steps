@@ -124,6 +124,9 @@ Here's a step-by-step guide to using `k6-cucumber-steps` in your project:
       ],
       paths: ["./features/*.feature"],
       tags: process.env.TAGS,
+      worldParameters: {
+      payloadPath: "apps/qa/performance/payloads"
+    }
       overwrite: false, // Default to not overwrite the report file
     };
     ```
