@@ -53,18 +53,20 @@
     "@babel/cli": "latest",
     "@babel/core": "latest",
     "@babel/preset-env": "latest",
-    "@babel/register": "latest",
-    "@cucumber/cucumber": "latest",
-    "@faker-js/faker": "latest",
     "@types/k6": "latest",
     "child_process": "latest",
     "cucumber-console-formatter": "latest",
     "cucumber-html-reporter": "latest",
-    "dotenv": "latest",
     "esbuild": "latest",
     "form-data": "latest",
     "k6": "latest",
-    "tsconfig-paths": "latest",
+    "tsconfig-paths": "latest"
+  },
+  "dependencies": {
+    "@babel/register": "latest",
+    "@cucumber/cucumber": "latest",
+    "@faker-js/faker": "latest",
+    "dotenv": "latest",
     "yargs": "latest"
   }
 }
