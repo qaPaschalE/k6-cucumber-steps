@@ -152,6 +152,34 @@ When(
 When("I set the authentication type to {string}", function (authType) {
   this.config.headers = generateHeaders(authType, process.env);
 });
+/**
+ * Then I store the value at "data.token" as alias "token"
+ */
+Then(
+  "I store the value at {string} as alias {string}",
+  function (jsonPath, alias) {
+    if (!this.lastResponse) {
+      throw new Error("No previous response available.");
+    }
+
+    const pathParts = jsonPath.split(".");
+    let value = this.lastResponse;
+
+    for (const key of pathParts) {
+      value = value?.[key];
+      if (value === undefined) break;
+    }
+
+    if (value === undefined) {
+      throw new Error(`Could not resolve path "${jsonPath}" in the response`);
+    }
+
+    if (!this.aliases) this.aliases = {};
+    this.aliases[alias] = value;
+
+    console.log(`🧩 Stored alias "${alias}":`, value);
+  }
+);
 
 /**
  * @param {string} method - HTTP method of the request.

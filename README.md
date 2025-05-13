@@ -217,6 +217,7 @@ When I set the authentication type to "api_key"
 When I set the authentication type to "bearer_token"
 When I set the authentication type to "basic"
 When I set the authentication type to "none"
+When I set the authentication type to "custom-alias"
 ```
 
 ### Request Configuration Steps
@@ -227,6 +228,8 @@ When I set to run the k6 script with the following configurations:
 When I set the request headers:
 When I set the following endpoints used:
 When I set the following {word} body is used for {string}
+When I store the value at {string} as alias {string}
+
 ```
 
 ### Assertion Steps
