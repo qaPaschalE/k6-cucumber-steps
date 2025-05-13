@@ -198,8 +198,13 @@ When(
  * When I set the authentication type to "none"
  */
 When("I set the authentication type to {string}", function (authType) {
-  this.config.headers = generateHeaders(authType, process.env);
+  this.config.headers = generateHeaders(
+    authType,
+    process.env,
+    this.aliases || {}
+  );
 });
+
 /**
  * Then I store the value at "data.token" as alias "token"
  */
