@@ -9,6 +9,7 @@ const buildK6Script = require("../lib/helpers/buildK6Script.js");
 const generateHeaders = require("../lib/helpers/generateHeaders.js");
 const { generateK6Script, runK6Script } = require("../lib/utils/k6Runner.js");
 require("dotenv").config();
+const axios = require("axios");
 
 // Validate thresholds (e.g., "rate<0.01")
 const validateThreshold = (threshold) => {
@@ -141,6 +142,49 @@ When(
   }
 );
 
+When(
+  "I use JSON payload from {string} for {word} to {string}",
+  function (fileName, method, endpoint) {
+    const allowedMethods = ["POST", "PUT", "PATCH"];
+    const methodUpper = method.toUpperCase();
+
+    if (!allowedMethods.includes(methodUpper)) {
+      throw new Error(
+        `Method "${method}" is not supported. Use one of: ${allowedMethods.join(
+          ", "
+        )}`
+      );
+    }
+
+    const payloadPath = path.resolve(__dirname, "../../payloads", fileName);
+    if (!fs.existsSync(payloadPath)) {
+      throw new Error(`Payload file not found: ${fileName}`);
+    }
+
+    const rawTemplate = fs.readFileSync(payloadPath, "utf-8");
+    const resolved = resolveBody(rawTemplate, {
+      ...process.env,
+      ...(this.aliases || {}),
+    });
+
+    this.config = {
+      method: methodUpper,
+      endpoint,
+      body: resolved,
+      headers: this.config?.headers || {},
+      options: {
+        vus: 1,
+        iterations: 1,
+      },
+    };
+
+    this.lastRequest = {
+      method: methodUpper,
+      endpoint,
+      body: resolved,
+    };
+  }
+);
 /**
  * @param {string} authType - Authentication type (api_key, bearer_token, basic, none).
  * @example
@@ -178,6 +222,41 @@ Then(
     this.aliases[alias] = value;
 
     console.log(`🧩 Stored alias "${alias}":`, value);
+  }
+);
+When(
+  "I login via POST to {string} with payload from {string}",
+  async function (endpoint, fileName) {
+    const payloadPath = path.resolve(__dirname, "../../payloads", fileName);
+
+    if (!fs.existsSync(payloadPath)) {
+      throw new Error(`Payload file not found: ${fileName}`);
+    }
+
+    const rawTemplate = fs.readFileSync(payloadPath, "utf-8");
+
+    const resolved = resolveBody(rawTemplate, {
+      ...process.env,
+      ...(this.aliases || {}),
+    });
+
+    try {
+      const response = await axios.post(
+        `${process.env.BASE_URL}${endpoint}`,
+        resolved,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      this.lastResponse = response.data; // ✅ Makes aliasing work
+      console.log("🔐 Login successful, response saved to alias context.");
+    } catch (err) {
+      console.error("❌ Login request failed:", err.message);
+      throw new Error("Login request failed");
+    }
   }
 );
 
