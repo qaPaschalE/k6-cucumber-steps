@@ -150,6 +150,7 @@ npx k6-cucumber-steps run --configFile cucumber.prod.js
 
     ```env
     BASE_URL=[https://api.example.com](https://api.example.com)
+    API_BASE_URL=[https://api.example.com](https://api.example.com)
     API_KEY=your_api_key
     BEARER_TOKEN=your_bearer_token
     BASIC_USER=your_basic_user
