@@ -8,5 +8,6 @@
   "cucumber.glue": [
     "step_definitions/*.js",
     "src/features/stepDefinitions/*.js"
-  ]
+  ],
+  "liveServer.settings.port": 5501
 }

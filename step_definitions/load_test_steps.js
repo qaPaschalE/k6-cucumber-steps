@@ -35,26 +35,56 @@ Given("I set a k6 script for {word} testing", function (method) {
  * When I set to run the k6 script with the following configurations:
  * | virtual_users | duration | http_req_failed | http_req_duration | error_rate | stages                                                              |
  * | 10            | 5        | rate<0.05       | p(95)<200         |            |                                                                     |
- * | 50            | 10       |                 |                   | rate<0.01  | [{"target": 10, "duration": "10s"}, {"target": 50, "duration": "30s"}] |
+ * | 50            | 10       | rate<0.01       |                   | rate<0.01  | [{"target": 10, "duration": "10s"}, {"target": 50, "duration": "30s"}] |
  */
 When(
   "I set to run the k6 script with the following configurations:",
   function (dataTable) {
-    const row = dataTable.hashes()[0];
+    const rawRow = dataTable.hashes()[0];
+    const row = {};
 
-    // Validate thresholds only if they are not placeholders
-    const validateIfNotPlaceholder = (value) => {
-      if (value && !/^<.*>$/.test(value)) {
-        validateThreshold(value);
+    // Extract example values manually from this.pickle
+    const exampleMap = {};
+    if (this.pickle && this.pickle.astNodeIds && this.gherkinDocument) {
+      const scenario = this.gherkinDocument.feature.children.find((child) => {
+        return child.scenario && child.scenario.examples?.length;
+      });
+
+      const exampleValues =
+        scenario?.scenario?.examples?.[0]?.tableBody?.[0]?.cells?.map(
+          (cell) => cell.value
+        ) || [];
+
+      const exampleKeys =
+        scenario?.scenario?.examples?.[0]?.tableHeader?.cells?.map(
+          (cell) => cell.value
+        ) || [];
+
+      exampleKeys.forEach((key, idx) => {
+        exampleMap[key] = exampleValues[idx];
+      });
+    }
+
+    for (const [key, value] of Object.entries(rawRow)) {
+      row[key] = value.replace(/<([^>]+)>/g, (_, param) => {
+        return exampleMap[param] || value;
+      });
+    }
+
+    console.log("🚨 Resolved config row:", row);
+
+    const validateThreshold = (value) => {
+      const regex = /^[\w{}()<>:]+[<>=]\d+(\.\d+)?$/;
+      if (value && !regex.test(value)) {
+        throw new Error(`Invalid threshold format: ${value}`);
       }
     };
 
-    validateIfNotPlaceholder(row.http_req_failed);
-    validateIfNotPlaceholder(row.http_req_duration);
-    validateIfNotPlaceholder(row.error_rate);
+    validateThreshold(row.http_req_failed);
+    validateThreshold(row.http_req_duration);
+    validateThreshold(row.error_rate);
 
     if (row.stages) {
-      // User provided a stages definition (JSON array)
       try {
         this.config.options = {
           stages: JSON.parse(row.stages),
@@ -63,11 +93,10 @@ When(
             http_req_duration: [row.http_req_duration],
           },
         };
-      } catch (err) {
+      } catch {
         throw new Error("Invalid stages JSON format.");
       }
     } else {
-      // Default to VUs and duration
       this.config.options = {
         vus: parseInt(row.virtual_users),
         duration: `${row.duration}s`,
@@ -78,7 +107,7 @@ When(
       };
     }
 
-    if (row.error_rate && !/^<.*>$/.test(row.error_rate)) {
+    if (row.error_rate) {
       this.config.options.thresholds.error_rate = [row.error_rate];
     }
   }
@@ -171,14 +200,11 @@ When(
     });
 
     this.config = {
+      ...this.config, // ✅ Keep previously set options!
       method: methodUpper,
       endpoint,
       body: resolved,
       headers: this.config?.headers || {},
-      options: {
-        vus: 1,
-        iterations: 1,
-      },
     };
 
     this.lastRequest = {
