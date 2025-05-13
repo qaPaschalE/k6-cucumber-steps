@@ -224,6 +224,7 @@ When I set the authentication type to "custom-alias"
 
 ```gherkin
 Given I set a k6 script for {word} testing
+Given I login via POST to {string} with payload from {string}
 When I set to run the k6 script with the following configurations:
 When I set the request headers:
 When I set the following endpoints used:
