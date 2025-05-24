@@ -1,10 +1,13 @@
 #!/usr/bin/env node
-
+//bin/k6-cucumber-steps.js
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
 const yargs = require("yargs");
 require("dotenv").config();
+const generateHtmlReports = require("../scripts/generateHtmlReports");
+
+const { linkReports } = require("../scripts/linkReports");
 
 console.log(`
   -----------------------------------------
@@ -145,12 +148,17 @@ const cucumberProcess = spawn("npx", cucumberArgs, {
 });
 
 cucumberProcess.on("close", (code) => {
-  console.log(`\n-----------------------------------------`);
   if (code === 0) {
+    console.log("-----------------------------------------");
     console.log("✅ k6-cucumber-steps execution completed successfully.");
+    generateHtmlReports(); // 🆕 Generate beautiful cucumber report
+    linkReports(); // 🔗 Add cross-links (optional)
+    console.log("🔗 Linked Cucumber + K6 HTML reports");
+    console.log("-----------------------------------------");
   } else {
+    console.error("-----------------------------------------");
     console.error("❌ k6-cucumber-steps execution failed.");
+    console.error("-----------------------------------------");
   }
-  console.log(`-----------------------------------------\n`);
   process.exit(code);
 });

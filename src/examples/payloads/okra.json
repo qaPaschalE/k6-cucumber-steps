@@ -1,0 +1,200 @@
+{
+  "customer": {
+    "id": "CUS-20250429-201411862-PTF6",
+    "email": "qatesta222@yopmail.com",
+    "lastName": "test",
+    "firstName": "new",
+    "phone": "7689999999"
+  },
+  "bankStatement": {
+    "type": "okra",
+    "content": [
+      {
+        "notes": {
+          "topics": ["a"],
+          "places": ["a"],
+          "people": ["a"],
+          "actions": ["c"],
+          "subjects": ["b"],
+          "preopositions": [],
+          "desc": "Doloribus nihil commodi omnis libero dolores molestiae omnis.",
+          "prepositions": ["b"]
+        },
+        "fetched": ["5ec3fb6768081106c5c6c575"],
+        "record": [
+          "5fe1e59ee302eb13f077a7ff",
+          "5fe31cac9bc54814ac2b578b",
+          "6026642180f2892fc05c5fdc"
+        ],
+        "analyzed": [],
+        "ner": {
+          "account": ["9544379614"],
+          "beneficiaries": "Prosper Moses"
+        },
+        "ner_v": 0,
+        "_id": "5fe1e5d3e302eb13f077a816",
+        "manual": false,
+        "reconciled": false,
+        "actions": [],
+        "location": {
+          "address": "787 Dr. Mary Agusto Mountains, Ndokwa West Zamfara",
+          "lat": 6.634043,
+          "long": 1.561922,
+          "raw": "Abiodun Motors"
+        },
+        "branch": "UOKEMAF1TAV",
+        "cleared_date": "2020-12-22T00:57:55.766Z",
+        "unformatted_cleared_date": "22-12-2020",
+        "code": "1",
+        "credit": 61143,
+        "debit": null,
+        "trans_date": "2020-12-22T04:19:47.721Z",
+        "unformatted_trans_date": "22-12-2020",
+        "customer": {
+          "_id": "5fe1e563798ba608e8f59756",
+          "name": "Indicina Tester 1"
+        },
+        "account": {
+          "_id": "5fe1e5aea56bffc4e84024ab",
+          "name": "Indicina Tester 1"
+        },
+        "env": "production-sandbox",
+        "bank": {
+          "icon": "https://okra-images.s3.eu-west-3.amazonaws.com/Guaranty+Trust+Bank+Logo+Color.svg",
+          "logo": "https://okra-images.s3.eu-west-3.amazonaws.com/GT+Bank.svg",
+          "name": "Guaranty Trust Bank",
+          "status": "healthy"
+        },
+        "checked": [],
+        "created_at": "2020-12-22T12:25:55.892Z",
+        "last_updated": "2021-02-12T11:21:11.463Z",
+        "__v": 0,
+        "balance": 3826275
+      },
+      {
+        "notes": {
+          "topics": ["c"],
+          "places": ["c"],
+          "people": ["c"],
+          "actions": ["b"],
+          "subjects": ["c"],
+          "preopositions": [],
+          "desc": "Et quasi sint voluptatem itaque consequatur.",
+          "prepositions": ["b"]
+        },
+        "fetched": ["5ec3fb6768081106c5c6c575"],
+        "record": [
+          "5fe1e59ee302eb13f077a7ff",
+          "5fe31cac9bc54814ac2b578b",
+          "5fe31e1ffa288e1853728db1"
+        ],
+        "analyzed": [],
+        "ner": {
+          "account": ["9544539229"],
+          "beneficiaries": "Alice Alice"
+        },
+        "ner_v": 0,
+        "_id": "5fe1e5d3e302eb13f077a81c",
+        "manual": false,
+        "reconciled": false,
+        "actions": [],
+        "location": {
+          "address": "4317 Dr. Vanessa Johnson Squares, Madagali Yobe",
+          "lat": 1.137887,
+          "long": 8.053104,
+          "raw": "AkeebTech Limited"
+        },
+        "branch": "HPYOTCP1",
+        "cleared_date": "2020-12-22T02:08:59.812Z",
+        "unformatted_cleared_date": "22-12-2020",
+        "code": "n",
+        "credit": null,
+        "debit": 45397,
+        "trans_date": "2020-12-22T01:25:46.421Z",
+        "unformatted_trans_date": "22-12-2020",
+        "customer": {
+          "_id": "5fe1e563798ba608e8f59756",
+          "name": "Indicina Tester 1"
+        },
+        "account": {
+          "_id": "5fe1e5aea56bffc4e84024ab",
+          "name": "Indicina Tester 1"
+        },
+        "env": "production-sandbox",
+        "bank": {
+          "icon": "https://okra-images.s3.eu-west-3.amazonaws.com/Guaranty+Trust+Bank+Logo+Color.svg",
+          "logo": "https://okra-images.s3.eu-west-3.amazonaws.com/GT+Bank.svg",
+          "name": "Guaranty Trust Bank",
+          "status": "healthy"
+        },
+        "checked": [],
+        "created_at": "2020-12-22T12:25:55.892Z",
+        "last_updated": "2021-02-12T11:21:11.463Z",
+        "__v": 0,
+        "balance": 2886713
+      },
+      {
+        "notes": {
+          "topics": ["c"],
+          "places": ["b"],
+          "people": ["b"],
+          "actions": ["a"],
+          "subjects": ["b"],
+          "preopositions": [],
+          "desc": "Consequatur optio natus nam tenetur veniam.",
+          "prepositions": ["a"]
+        },
+        "fetched": ["5ec3fb6768081106c5c6c575"],
+        "record": [
+          "5fe1e59ee302eb13f077a7ff",
+          "5fe31cac9bc54814ac2b578b",
+          "6026642180f2892fc05c5fdc"
+        ],
+        "analyzed": [],
+        "ner": {
+          "account": ["9544505406"],
+          "beneficiaries": "Jeniffer Jorge"
+        },
+        "ner_v": 0,
+        "_id": "5fe1e5d3e302eb13f077a820",
+        "manual": false,
+        "reconciled": false,
+        "actions": [],
+        "location": {
+          "address": "4003 Dr. Godwill Severin Ville, Ogbia Anambra",
+          "lat": 9.152999,
+          "long": 1.074576,
+          "raw": "Uche Microfinance Bank"
+        },
+        "branch": "SRHALYJ1",
+        "cleared_date": "2020-12-21T20:04:04.213Z",
+        "unformatted_cleared_date": "22-12-2020",
+        "code": "s",
+        "credit": 84358,
+        "debit": null,
+        "trans_date": "2020-12-22T01:04:32.391Z",
+        "unformatted_trans_date": "21-12-2020",
+        "customer": {
+          "_id": "5fe1e563798ba608e8f59756",
+          "name": "Indicina Tester 1"
+        },
+        "account": {
+          "_id": "5fe1e5aea56bffc4e84024ab",
+          "name": "Indicina Tester 1"
+        },
+        "env": "production-sandbox",
+        "bank": {
+          "icon": "https://okra-images.s3.eu-west-3.amazonaws.com/Guaranty+Trust+Bank+Logo+Color.svg",
+          "logo": "https://okra-images.s3.eu-west-3.amazonaws.com/GT+Bank.svg",
+          "name": "Guaranty Trust Bank",
+          "status": "healthy"
+        },
+        "checked": [],
+        "created_at": "2020-12-22T12:25:55.892Z",
+        "last_updated": "2021-02-12T11:21:11.463Z",
+        "__v": 0,
+        "balance": 3281378
+      }
+    ]
+  }
+}
