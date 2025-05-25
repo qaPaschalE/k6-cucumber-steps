@@ -7,7 +7,7 @@ module.exports = {
       "html:./reports/cucumber-report.html",
     ],
     paths: ["./features/bsp.feature"],
-    tags: "@rate-limit",
+    tags: "@load",
     worldParameters: {
       payloadPath: "src/examples/payloads",
     },
