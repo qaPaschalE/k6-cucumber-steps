@@ -5,8 +5,7 @@ const fs = require("fs");
 const { spawn } = require("child_process");
 const yargs = require("yargs");
 require("dotenv").config();
-const generateHtmlReports = require("../scripts/generateHtmlReports");
-
+const { generateHtmlReports } = require("../scripts/generateHtmlReports");
 const { linkReports } = require("../scripts/linkReports");
 
 console.log(`
@@ -98,9 +97,32 @@ if (configOptions.require && Array.isArray(configOptions.require)) {
 
 // Determine base report name
 const reportsDir = path.join(process.cwd(), "reports");
+// Clean and prepare reports directory
+const cleanReportsDir = () => {
+  if (fs.existsSync(reportsDir)) {
+    try {
+      fs.rmSync(reportsDir, { recursive: true, force: true });
+      console.log("🧹 Cleaned existing reports directory.");
+    } catch (err) {
+      console.error("❌ Failed to clean reports directory:", err.message);
+      process.exit(1);
+    }
+  }
+
+  try {
+    fs.mkdirSync(reportsDir, { recursive: true });
+    console.log("📁 Created fresh reports directory.");
+  } catch (err) {
+    console.error("❌ Failed to create reports directory:", err.message);
+    process.exit(1);
+  }
+};
+
+cleanReportsDir();
+
 const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 
-let baseReportName = "load-results";
+let baseReportName = "load-report";
 if (featureFiles.length === 1) {
   const nameFromFeature = path.basename(featureFiles[0], ".feature");
   baseReportName = nameFromFeature || baseReportName;
@@ -151,14 +173,27 @@ cucumberProcess.on("close", (code) => {
   if (code === 0) {
     console.log("-----------------------------------------");
     console.log("✅ k6-cucumber-steps execution completed successfully.");
-    generateHtmlReports(); // 🆕 Generate beautiful cucumber report
-    linkReports(); // 🔗 Add cross-links (optional)
-    console.log("🔗 Linked Cucumber + K6 HTML reports");
+
+    generateHtmlReports(); // Cucumber HTML
+    console.log(
+      "🚀 Cucumber HTML report reports/cucumber-report.html generated successfully 👍"
+    );
+
+    const k6ReportPath = detectMostRecentK6Report(); // Add this helper function
+    if (k6ReportPath) {
+      console.log(
+        `📄 K6 HTML report ${k6ReportPath} generated successfully 👍`
+      );
+    }
+
+    linkReports(); // Link both reports
+
     console.log("-----------------------------------------");
   } else {
     console.error("-----------------------------------------");
     console.error("❌ k6-cucumber-steps execution failed.");
     console.error("-----------------------------------------");
   }
+
   process.exit(code);
 });

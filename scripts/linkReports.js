@@ -1,33 +1,60 @@
 const fs = require("fs");
 const path = require("path");
 
-const cucumberHtmlPath = path.resolve("reports", "cucumber-report.html");
-const k6HtmlPath = path.resolve("reports", "k6-report.html");
+const reportsDir = path.resolve("reports");
 
-function addLink(filePath, linkText, linkHref) {
-  if (!fs.existsSync(filePath)) {
-    console.warn(`⚠️ Report file not found: ${filePath}`);
+/**
+ * Adds internal cross-links between reports.
+ */
+function addLinksToReport(targetFile, otherFiles) {
+  const content = fs.readFileSync(targetFile, "utf-8");
+
+  // Inject the Cucumber Report tab before the Request Metrics tab
+  const cucumberTab = `
+    <input type="radio" name="tabs" id="tabcucumber">
+    <label for="tabcucumber"><i class="fas fa-file-alt"></i> &nbsp; Cucumber Report</label>
+    <div class="tab">
+      <iframe src="cucumber-report.html" style="width:100%; height:600px; border:none;"></iframe>
+    </div>
+  `;
+
+  const modifiedContent = content
+    .replace(
+      /<input type="radio" name="tabs" id="tabone"/,
+      `${cucumberTab}\n<input type="radio" name="tabs" id="tabone"`
+    )
+    // Remove standalone links to cucumber-report.html or k6-report.html
+    .replace(
+      /<div style="padding:10px;margin-top:20px;text-align:center">[\s\S]*?View (Cucumber|k6).*?<\/div>/,
+      ""
+    );
+
+  fs.writeFileSync(targetFile, modifiedContent, "utf-8");
+}
+
+/**
+ * Auto-link all HTML reports in the reports directory.
+ */
+function linkReports() {
+  if (!fs.existsSync(reportsDir)) {
+    console.warn("⚠️ No reports directory found.");
     return;
   }
 
-  const html = fs.readFileSync(filePath, "utf-8");
+  const htmlFiles = fs
+    .readdirSync(reportsDir)
+    .filter((f) => f.endsWith(".html"))
+    .map((f) => path.join(reportsDir, f));
 
-  const linkHtml = `<div style="margin:10px;padding:10px;background:#eef;border:1px solid #ccc;">
-    🔗 <strong><a href="${linkHref}" target="_blank">${linkText}</a></strong>
-  </div>`;
+  if (htmlFiles.length < 2) {
+    console.warn("⚠️ Not enough HTML files to link.");
+    return;
+  }
 
-  const modified = html.replace(
-    /<body[^>]*>/i,
-    (match) => match + "\n" + linkHtml
-  );
-
-  fs.writeFileSync(filePath, modified, "utf-8");
-  console.log(`🔗 Linked reports in: ${path.basename(filePath)}`);
-}
-
-function linkReports() {
-  addLink(cucumberHtmlPath, "View K6 Load Report", "k6-report.html");
-  addLink(k6HtmlPath, "View Cucumber Report", "cucumber-report.html");
+  for (const file of htmlFiles) {
+    const others = htmlFiles.filter((f) => f !== file);
+    addLinksToReport(file, others);
+  }
 }
 
 module.exports = { linkReports };

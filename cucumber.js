@@ -3,8 +3,8 @@ module.exports = {
     // require: ["./step_definitions/**/*.js"],
     format: [
       "summary",
-      "json:./src/examples/reports/load-report.json",
-      "html:./src/examples/reports/report.html",
+      "json:./reports/load-report.json",
+      "html:./reports/cucumber-report.html",
     ],
     paths: ["./features/bsp.feature"],
     tags: "@rate-limit",
