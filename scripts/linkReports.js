@@ -1,60 +1,122 @@
 const fs = require("fs");
 const path = require("path");
+const { minify } = require("html-minifier-terser");
 
 const reportsDir = path.resolve("reports");
 
-/**
- * Adds internal cross-links between reports.
- */
-function addLinksToReport(targetFile, otherFiles) {
-  const content = fs.readFileSync(targetFile, "utf-8");
+function findCucumberReportPath() {
+  const files = fs.readdirSync(reportsDir);
+  return files.find((f) => f.includes("cucumber") && f.endsWith(".html"));
+}
 
-  // Inject the Cucumber Report tab before the Request Metrics tab
+function extractCucumberBody(filepath) {
+  const html = fs.readFileSync(filepath, "utf-8");
+
+  // Remove <script> tags to avoid JS conflicts
+  const withoutScripts = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+
+  const match = withoutScripts.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  return match
+    ? match[1]
+    : "<p>⚠️ Failed to extract body of Cucumber report.</p>";
+}
+
+function extractK6ReportBody(file) {
+  const html = fs.readFileSync(file, "utf-8");
+  const match = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  return match ? match[1] : "";
+}
+
+function buildCombinedHtml({ title, k6Bodies, cucumberBody }) {
+  const tabs = k6Bodies
+    .map(
+      (_, i) => `
+    <input type="radio" name="tabs" id="tabk6${i}" ${i === 0 ? "checked" : ""}>
+    <label for="tabk6${i}">K6 Report ${i + 1}</label>
+    <div class="tab">
+      ${k6Bodies[i]}
+    </div>
+  `
+    )
+    .join("\n");
+
   const cucumberTab = `
     <input type="radio" name="tabs" id="tabcucumber">
-    <label for="tabcucumber"><i class="fas fa-file-alt"></i> &nbsp; Cucumber Report</label>
+    <label for="tabcucumber">Cucumber Report</label>
     <div class="tab">
-      <iframe src="cucumber-report.html" style="width:100%; height:600px; border:none;"></iframe>
+      <div style="max-height:80vh; overflow:auto; padding:1rem;">
+        ${cucumberBody}
+      </div>
     </div>
   `;
 
-  const modifiedContent = content
-    .replace(
-      /<input type="radio" name="tabs" id="tabone"/,
-      `${cucumberTab}\n<input type="radio" name="tabs" id="tabone"`
-    )
-    // Remove standalone links to cucumber-report.html or k6-report.html
-    .replace(
-      /<div style="padding:10px;margin-top:20px;text-align:center">[\s\S]*?View (Cucumber|k6).*?<\/div>/,
-      ""
-    );
+  const fullTabs = cucumberBody ? cucumberTab + tabs : tabs;
 
-  fs.writeFileSync(targetFile, modifiedContent, "utf-8");
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>${title}</title>
+  <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.3/build/pure-min.css" crossorigin="anonymous">
+  <style>
+    body { margin:1rem; font-family:sans-serif; }
+    .tabs { display:flex; flex-wrap:wrap; }
+    .tabs label { order:1; padding:1rem; cursor:pointer; background:#ddd; margin-right:0.2rem; border-radius:5px 5px 0 0; }
+    .tabs .tab { order:99; flex-grow:1; width:100%; display:none; padding:1rem; background:#fff; }
+    .tabs input[type="radio"] { display:none; }
+    .tabs input[type="radio"]:checked + label { background:#fff; font-weight:bold; }
+    .tabs input[type="radio"]:checked + label + .tab { display:block; }
+  </style>
+</head>
+<body>
+  <h1>${title}</h1>
+  <div class="tabs">
+    ${fullTabs}
+  </div>
+</body>
+</html>`;
 }
 
-/**
- * Auto-link all HTML reports in the reports directory.
- */
-function linkReports() {
+async function linkReports() {
   if (!fs.existsSync(reportsDir)) {
     console.warn("⚠️ No reports directory found.");
     return;
   }
 
-  const htmlFiles = fs
-    .readdirSync(reportsDir)
-    .filter((f) => f.endsWith(".html"))
-    .map((f) => path.join(reportsDir, f));
+  const cucumberFile = findCucumberReportPath();
+  const cucumberBody = cucumberFile
+    ? extractCucumberBody(path.join(reportsDir, cucumberFile))
+    : null;
 
-  if (htmlFiles.length < 2) {
-    console.warn("⚠️ Not enough HTML files to link.");
+  const k6Files = fs
+    .readdirSync(reportsDir)
+    .filter((f) => /^k6-report.*\.html$/.test(f));
+  if (k6Files.length === 0) {
+    console.warn("⚠️ No K6 reports found.");
     return;
   }
 
-  for (const file of htmlFiles) {
-    const others = htmlFiles.filter((f) => f !== file);
-    addLinksToReport(file, others);
-  }
+  const k6Bodies = k6Files.map((f) =>
+    extractK6ReportBody(path.join(reportsDir, f))
+  );
+
+  const combinedHtml = buildCombinedHtml({
+    title: "Combined K6 + Cucumber Report",
+    k6Bodies,
+    cucumberBody,
+  });
+
+  const finalHtml = await minify(combinedHtml, {
+    collapseWhitespace: true,
+    removeComments: true,
+    minifyCSS: true,
+  });
+
+  const outPath = path.join(reportsDir, "combined-report.html");
+  fs.writeFileSync(outPath, finalHtml, "utf-8");
+
+  console.log(`✅ Combined and minified report saved to: ${outPath}`);
 }
 
 module.exports = { linkReports };

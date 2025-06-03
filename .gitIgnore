@@ -7,3 +7,7 @@ reports
 temp/
 tmp/
 .DS_Store
+cucumber.js
+payloads/login.json
+payloads/okra.json
+features/bsp.feature

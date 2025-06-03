@@ -97,7 +97,6 @@ if (configOptions.require && Array.isArray(configOptions.require)) {
 
 // Determine base report name
 const reportsDir = path.join(process.cwd(), "reports");
-// Clean and prepare reports directory
 const cleanReportsDir = () => {
   if (fs.existsSync(reportsDir)) {
     try {
@@ -136,12 +135,16 @@ const shouldOverwrite =
   process.env.K6_CUCUMBER_OVERWRITE === "true" ||
   configOptions.overwrite === true;
 
-let reportJsonPath = path.join(reportsDir, `${baseReportName}.json`);
+let reportJsonPath = "reports/load-report.json";
 let reportHtmlPath = path.join(reportsDir, `${baseReportName}.html`);
 
-if (!shouldOverwrite) {
-  reportJsonPath = path.join(reportsDir, `${baseReportName}-${timestamp}.json`);
-  reportHtmlPath = path.join(reportsDir, `${baseReportName}-${timestamp}.html`);
+// 🆕 Respect config format path if defined
+if (Array.isArray(configOptions.format)) {
+  const jsonFmt = configOptions.format.find((f) => f.startsWith("json:"));
+  if (jsonFmt) {
+    reportJsonPath = jsonFmt.split("json:")[1];
+    console.log(`📝 Using report path from config: ${reportJsonPath}`);
+  }
 }
 
 const formatInConfig =
@@ -169,25 +172,38 @@ const cucumberProcess = spawn("npx", cucumberArgs, {
   },
 });
 
-cucumberProcess.on("close", (code) => {
+function detectMostRecentK6Report() {
+  const reportsDir = path.join(process.cwd(), "reports");
+  if (!fs.existsSync(reportsDir)) return null;
+
+  const files = fs
+    .readdirSync(reportsDir)
+    .filter((file) => /^k6-report.*\.html$/.test(file))
+    .map((file) => ({
+      name: file,
+      time: fs.statSync(path.join(reportsDir, file)).mtime.getTime(),
+    }))
+    .sort((a, b) => b.time - a.time);
+
+  return files.length > 0 ? path.join("reports", files[0].name) : null;
+}
+
+cucumberProcess.on("close", async (code) => {
   if (code === 0) {
     console.log("-----------------------------------------");
     console.log("✅ k6-cucumber-steps execution completed successfully.");
 
-    generateHtmlReports(); // Cucumber HTML
+    generateHtmlReports(); // 🍋 Cucumber HTML
+
     console.log(
       "🚀 Cucumber HTML report reports/cucumber-report.html generated successfully 👍"
     );
 
-    const k6ReportPath = detectMostRecentK6Report(); // Add this helper function
-    if (k6ReportPath) {
-      console.log(
-        `📄 K6 HTML report ${k6ReportPath} generated successfully 👍`
-      );
-    }
+    await linkReports(); // 🧬 Combine and link reports
 
-    linkReports(); // Link both reports
-
+    console.log(
+      "📦 Combined and minified HTML report available at: reports/combined-report.html"
+    );
     console.log("-----------------------------------------");
   } else {
     console.error("-----------------------------------------");

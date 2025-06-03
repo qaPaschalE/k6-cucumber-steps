@@ -1,15 +1,15 @@
 module.exports = {
   default: {
-    // require: ["./step_definitions/**/*.js"],
+    require: ["./step_definitions/**/*.js"],
     format: [
       "summary",
       "json:./reports/load-report.json",
       "html:./reports/cucumber-report.html",
     ],
     paths: ["./features/bsp.feature"],
-    tags: "@load",
+    tags: "@rate-limit",
     worldParameters: {
-      payloadPath: "src/examples/payloads",
+      payloadPath: "payloads",
     },
     overwrite: true,
     reporter: true,
