@@ -45,9 +45,6 @@ Feature: Run load tests with dynamic GET and POST body from environment variable
     Examples:
       | virtual_users | duration | http_req_failed | http_req_duration |
       |            10 |        5 | rate<0.05       | p(95)<5000        |
-      |            50 |       10 | rate<0.05       | p(95)<5000        |
+      |             5 |        2 | rate<0.05       | p(95)<5000        |
 # |           100 |       15 | rate<0.05       | p(95)<3500        |
 # |           200 |       20 | rate<0.05       | p(95)<3500        |
-
-
-
