@@ -3,7 +3,8 @@
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
-const yargs = require("yargs");
+const yargs = require("yargs/yargs"); // Use the correct import for yargs
+const { hideBin } = require("yargs/helpers"); // Helper to parse CLI arguments
 require("dotenv").config();
 const { generateHtmlReports } = require("../scripts/generateHtmlReports");
 const { linkReports } = require("../scripts/linkReports");
@@ -14,7 +15,7 @@ console.log(`
   -----------------------------------------
 `);
 
-const argv = yargs
+const argv = yargs(hideBin(process.argv))
   .usage("Usage: $0 run [options]")
   .option("feature", {
     alias: "f",
