@@ -1,0 +1,13 @@
+# Ignore development config
+.gitignore
+.github/
+
+# Ignore test artifacts
+reports/
+generated/
+data/
+src/
+# Ignore source documentation
+docs/
+*.md
+!README.md
