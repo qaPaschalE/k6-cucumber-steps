@@ -6,6 +6,7 @@ dist/
 reports/
 *.html
 *.json
+!tsconfig.json # Don't ignore the TypeScript config
 !package.json # Don't ignore the actual package config
 
 # Test data & artifacts
