@@ -1,0 +1,42 @@
+name: build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        node-version: [lts/*]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
+      - name: Install Dependencies
+        run: npm install
+      - name: Configure Git for Commit
+        run: |
+          git config --global user.email "paschal.enyimiri@gmail.com"
+          git config --global user.name "Paschal Enyimiri"
+      - name: Add changes
+        run: git add .
+      - name: Commit changes
+        run: git commit -m "chore:Automated changes before versioning" || echo "No changes to commit"
+      - name: Set new version as patch and create commit
+        run: npm version patch
+      - name: Check new version
+        run: echo "New version is $(npm pkg get version)"
+      - name: Push changes
+        run: git push --follow-tags
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
