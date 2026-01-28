@@ -62,11 +62,11 @@ mkdir my-load-tests && cd my-load-tests
 npx k6-cucumber-steps init
 
 # OR Initialize with JavaScript
-npx k6-cucumber-steps init --lang js
+npx k6-cucumber-steps init --lang js|ts
 
 # 3. Install dependencies & Run
 npm install
-npx k6-cucumber-steps generate
+npx k6-cucumber-steps generate -l js|ts
 npm test
 
 ```
