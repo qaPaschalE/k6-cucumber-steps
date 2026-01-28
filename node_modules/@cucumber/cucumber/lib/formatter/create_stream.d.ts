@@ -1,6 +1,0 @@
-import { Writable } from 'node:stream';
-import { ILogger } from '../environment';
-export declare function createStream(target: string, onStreamError: () => void, cwd: string, logger: ILogger): Promise<{
-    directory: string;
-    stream: Writable;
-}>;

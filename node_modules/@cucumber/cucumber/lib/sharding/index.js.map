@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/sharding/index.ts"],"names":[],"mappings":";;AAAA,uDAAkD;AAElD,kBAAe,gCAAc,CAAA","sourcesContent":["import { shardingPlugin } from './sharding_plugin'\n\nexport default shardingPlugin\n"]}

@@ -1,4 +1,0 @@
-import { MarkdownPageEvent } from '../../../events/index.js';
-import { MarkdownThemeContext } from '../../../theme/index.js';
-import { ProjectReflection } from 'typedoc';
-export declare function index(this: MarkdownThemeContext, page: MarkdownPageEvent<ProjectReflection>): string;

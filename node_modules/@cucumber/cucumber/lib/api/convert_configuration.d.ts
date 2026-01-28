@@ -1,4 +1,0 @@
-import { IConfiguration } from '../configuration';
-import { ILogger } from '../environment';
-import { IRunConfiguration } from './types';
-export declare function convertConfiguration(logger: ILogger, flatConfiguration: IConfiguration, env: NodeJS.ProcessEnv): Promise<IRunConfiguration>;

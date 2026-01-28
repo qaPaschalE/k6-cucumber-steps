@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/publish/index.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;AAAA,qDAAgD;AAEhD,kBAAe,8BAAa,CAAA;AAC5B,0CAAuB","sourcesContent":["import { publishPlugin } from './publish_plugin'\n\nexport default publishPlugin\nexport * from './types'\n"]}

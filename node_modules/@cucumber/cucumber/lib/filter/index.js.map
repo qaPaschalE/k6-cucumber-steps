@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/filter/index.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;AAAA,mDAA8C;AAC9C,0CAAuB;AAEvB,kBAAe,4BAAY,CAAA","sourcesContent":["import { filterPlugin } from './filter_plugin'\nexport * from './types'\n\nexport default filterPlugin\n"]}

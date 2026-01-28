@@ -1,0 +1,29 @@
+# Dependency directories
+node_modules/
+dist/
+
+# k6 generated reports
+reports/
+*.html
+*.json
+!package.json # Don't ignore the actual package config
+
+# Test data & artifacts
+# We usually ignore the generated test files if they are rebuilt every run
+generated/
+
+# Sensitive Data
+# IMPORTANT: Ignore the token files created during the test
+data/*.json
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Editor folders
+.vscode/
+.idea/
+.DS_Store
