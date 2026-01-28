@@ -1,0 +1,1 @@
+{"version":3,"file":"context.js","sourceRoot":"","sources":["../../src/support_code_library_builder/context.ts"],"names":[],"mappings":"","sourcesContent":["export interface IContext<ParametersType = any> {\n  readonly parameters: ParametersType\n}\n"]}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Suggestion.json",
+  "additionalProperties": false,
+  "definitions": {
+    "Snippet": {
+      "additionalProperties": false,
+      "required": [
+        "language",
+        "code"
+      ],
+      "properties": {
+        "language": {
+          "description": "The programming language of the code.\n\nThis must be formatted as an all lowercase identifier such that syntax highlighters like [Prism](https://prismjs.com/#supported-languages) or [Highlight.js](https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md) can recognize it.\nFor example: `cpp`, `cs`, `go`, `java`, `javascript`, `php`, `python`, `ruby`, `scala`.",
+          "type": "string"
+        },
+        "code": {
+          "description": "A snippet of code",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "description": "A suggested fragment of code to implement an undefined step",
+  "required": [
+    "id",
+    "pickleStepId",
+    "snippets"
+  ],
+  "properties": {
+    "id": {
+      "description": "A unique id for this suggestion",
+      "type": "string"
+    },
+    "pickleStepId": {
+      "description": "The ID of the `PickleStep` this `Suggestion` was created for.",
+      "type": "string"
+    },
+    "snippets": {
+      "description": "A collection of code snippets that could implement the undefined step",
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Snippet"
+      }
+    }
+  },
+  "type": "object"
+}

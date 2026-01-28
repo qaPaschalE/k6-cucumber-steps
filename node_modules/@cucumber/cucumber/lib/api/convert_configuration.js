@@ -1,0 +1,70 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.convertConfiguration = convertConfiguration;
+const configuration_1 = require("../configuration");
+async function convertConfiguration(logger, flatConfiguration, env) {
+    return {
+        sources: {
+            paths: flatConfiguration.paths,
+            defaultDialect: flatConfiguration.language,
+            names: flatConfiguration.name,
+            tagExpression: flatConfiguration.tags,
+            order: flatConfiguration.order,
+            shard: flatConfiguration.shard,
+        },
+        support: {
+            requireModules: flatConfiguration.requireModule,
+            requirePaths: flatConfiguration.require,
+            importPaths: flatConfiguration.import,
+            loaders: flatConfiguration.loader,
+        },
+        runtime: {
+            dryRun: flatConfiguration.dryRun,
+            failFast: flatConfiguration.failFast,
+            filterStacktraces: !flatConfiguration.backtrace,
+            parallel: flatConfiguration.parallel,
+            retry: flatConfiguration.retry,
+            retryTagFilter: flatConfiguration.retryTagFilter,
+            strict: flatConfiguration.strict,
+            worldParameters: flatConfiguration.worldParameters,
+        },
+        formats: convertFormats(logger, flatConfiguration, env),
+        plugins: {
+            specifiers: flatConfiguration.plugin,
+            options: flatConfiguration.pluginOptions,
+        },
+    };
+}
+function convertFormats(logger, flatConfiguration, env) {
+    const splitFormats = flatConfiguration.format.map((item) => Array.isArray(item) ? item : (0, configuration_1.splitFormatDescriptor)(logger, item));
+    return {
+        stdout: [...splitFormats].reverse().find(([, target]) => !target)?.[0] ??
+            'progress',
+        files: splitFormats
+            .filter(([, target]) => !!target)
+            .reduce((mapped, [type, target]) => {
+            return {
+                ...mapped,
+                [target]: type,
+            };
+        }, {}),
+        publish: makePublishConfig(flatConfiguration, env),
+        options: flatConfiguration.formatOptions,
+    };
+}
+function makePublishConfig(flatConfiguration, env) {
+    const enabled = isPublishing(flatConfiguration, env);
+    if (!enabled) {
+        return false;
+    }
+    return {
+        url: env.CUCUMBER_PUBLISH_URL,
+        token: env.CUCUMBER_PUBLISH_TOKEN,
+    };
+}
+function isPublishing(flatConfiguration, env) {
+    return (flatConfiguration.publish ||
+        (0, configuration_1.isTruthyString)(env.CUCUMBER_PUBLISH_ENABLED) ||
+        env.CUCUMBER_PUBLISH_TOKEN !== undefined);
+}
+//# sourceMappingURL=convert_configuration.js.map
