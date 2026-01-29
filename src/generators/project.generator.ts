@@ -22,7 +22,8 @@ export class ProjectGenerator {
     this.generateSampleFeature(outputPath);
     this.generateBrowserSampleFeature(outputPath);
     this.generateAuthSampleFeature(outputPath);
-
+    // Generate global types for k6 + browser extensions
+    this.generateGlobalTypes(outputPath);
     // Generate sample step definitions
     this.generateSampleSteps(outputPath, config);
     // Generate gitignore
@@ -39,7 +40,18 @@ export class ProjectGenerator {
       fs.mkdirSync(dirPath, { recursive: true });
     }
   }
+  private generateGlobalTypes(outputPath: string): void {
+    const content = `// Auto-generated global types for k6-cucumber-steps
+declare global {
+  var savedTokens: Record<string, any>;
+  var lastResponse: any;
+  var exportedTokens: Record<string, any>;
+}
 
+export {};
+`;
+    fs.writeFileSync(path.join(outputPath, "global.types.d.ts"), content);
+  }
   private generatePackageJson(outputPath: string, config: ProjectConfig): void {
     const packageJson = {
       name: "k6-cucumber-test-project",
@@ -90,8 +102,8 @@ npm test
 \`\`\`
 
 ## Project Structure
-- \`features/\` - Gherkin feature files
-- \`steps/\` - Step definition implementations
+- \`Features/\` - Gherkin feature files
+      - \`steps/\` - Step definition implementations
 - \`generated/\` - Generated k6 scripts
 `;
 
@@ -178,21 +190,122 @@ Feature: Comprehensive API Testing
     );
   }
   private generateBrowserSampleFeature(outputPath: string): void {
-    const content = `@browser
-Feature: Browser Performance Example
-  # Scenarios with @browser tag run in a real Chromium instance
+    const content = `@iterations:1
+Feature: Comprehensive UI Automation on DemoQA
 
-  Scenario: Verify UI Elements
-    Given the base URL is "https://test.k6.io"
-    When I navigate to the "/" page
-    Then I see the text on the page "Collection of simple web-pages"
+  Background:
+    Given the base URL is "https://demoqa.com"
+
+  @browser
+  Scenario: Fill and submit the practice form successfully
+    When I navigate to the "/automation-practice-form" page
+    And I fill the field "#firstName" with "Paschal"
+    And I fill the field "#lastName" with "Enyimiri"
+    And I fill the field "#userEmail" with "paschal.cheps@example.com"
+    And I click on exact text "Male"
+    And I fill the field "#userNumber" with "0801234567"
+    And I wait "1" seconds
+    And I click on exact text "Music"
+    And I click on the element "#state"
+    And I click on exact text "NCR"
+    And I fill the field "#currentAddress" with "this is a load test on the ui"
+    And I wait "1" seconds
+    And I click on the element "#city"
+    And I click on exact text "Delhi"
+    And I click on the element "#submit"
+    Then I should see the text "Thanks for submitting the form"
+
+  Scenario: Interact using multiple locator strategies
+    When I navigate to the "/automation-practice-form" page
+    # By ID
+    And I find element by Id "firstName"
+    # By placeholder
+    And I find input element by placeholder text "First Name"
+    # By label/name (accessible)
+    And I find element by name "First Name"
+    # By role + name
+    And I find element by role "textbox" "First Name"
+    # By button text
+    And I find button by text "Submit"
+    # By value attribute
+    And I find element by value "Submit"
+    # Assertion
+    And I should see the text "Student Registration Form"
+
+  Scenario: Wait and validate dynamic content reliably
+    When I navigate to the "/automation-practice-form" page
+    And I wait "1" seconds
+    And I should see the element "#firstName"
+    And I should see the text "Practice Form"
+    And I should not see the text "Dropped!"
+
+  Scenario: Validate page metadata after navigation
+    When I navigate to the "/automation-practice-form" page
+    And the current URL should contain "automation-practice-form"
+    And the page title should be "DEMOQA"
+
+
+  Scenario: Find and interact using value / role
+    Given the base URL is "https://demoqa.com"
+    When I navigate to the "/automation-practice-form" page
+
+    # Find by value attribute
+    And I find element by value "Submit"
+    And I click
+
+    # Find by role (button with text)
+    And I find element by role "button" "Submit"
+    And I click
+
+    # Find by role (heading)
+    And I find element by role "heading" "Practice Form"
+    And I should see the text "Practice Form"
+
+    # Find by role (textbox)
+    And I find element by role "textbox" "First Name"
+    And I fill "Paschal"
+
+
+  Scenario: Wait and find elements
+    Given the base URL is "https://demoqa.com"
+    When I navigate to the "/automation-practice-form" page
+    And I wait "2" seconds
+    And I find input element by placeholder text "First Name"
+    And I find button by text "Submit"
+    And I find element by Id "firstName"
+    And I find elements by text "Name"
+
+  Scenario: Interact with repeated elements
+    When I navigate to the "/elements" page
+    And I fill the 1st "#input-field" with "First"
+    And I fill the 2nd "#input-field" with "Second"
+    And I click the 2nd "button[type='submit']"
+    Then I should see the 1st ".success-message"
+    # For single element (default = 1st)
+    And I click on the element "button"
+
+    # For nth element
+    And I click on the element "button" "2"
+    And I fill the field "#email" with "test@example.com" "1"
+
+  Scenario: Handle alert confirmation
+    When I navigate to the "/alerts" page
+    And I click on the element "#alertButton"
+    # Add step to accept alert if needed
+    Then I should see the text "You clicked a button"
+
+  Scenario: Drag and drop
+    When I navigate to the "/droppable" page
+    And I find element by Id "draggable"
+    And I drag to "#droppable"
+    Then I should see the text "Dropped!"
 `;
     fs.writeFileSync(
       path.join(outputPath, "features", "browserSample.feature"),
       content,
     );
   }
-  // src/generators/project.generator.ts
+
   private generateSampleSteps(outputPath: string, config: ProjectConfig): void {
     const isTS = config.language === "ts";
     const stepExtension = isTS ? ".ts" : ".js";
@@ -211,19 +324,11 @@ let defaultHeaders${headerType} = {
   'Content-Type': 'application/json'
 };
 
-/**
- * Given the base URL is "..."
- */
-export function theBaseUrlIs(url${stringType}) {
-  baseUrl = url;
-}
+/* ===== HTTP / API STEPS ===== */
 
-/**
- * When I authenticate with the following url and request body as {string} (as {string})
- * This handles both:
- * 1. ...as "user":
- * 2. ...as "user" as "form":
- */
+export function theBaseUrlIs(url${stringType}) {
+  baseUrl = url.trim();
+}
 export function iAuthenticateWithTheFollowingUrlAndRequestBodyAs(
   context${stringType}, 
   formatOrTable${anyType}, 
@@ -232,7 +337,6 @@ export function iAuthenticateWithTheFollowingUrlAndRequestBodyAs(
   let format = 'json';
   let dataTable;
 
-  // Argument shifting logic
   if (maybeTable === undefined) {
     format = 'json';
     dataTable = formatOrTable;
@@ -250,16 +354,9 @@ export function iAuthenticateWithTheFollowingUrlAndRequestBodyAs(
   let body;
   let params = { headers: {} };
 
-  /** * FORM FORMAT LOGIC
-   * k6 behavior: If the body is an object and Content-Type is x-www-form-urlencoded,
-   * k6 serializes the object into a query string (key=value&key2=value2).
-   */
   if (format === 'form') {
     params.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    /** * IMPORTANT: For k6 to auto-encode, the body MUST be a plain object.
-     * We ensure payload is clean of any non-serializable properties.
-     */
-    body = Object.assign({}, payload); 
+    body = Object.assign({}, payload);
   } else {
     params.headers['Content-Type'] = 'application/json';
     body = JSON.stringify(payload);
@@ -267,32 +364,25 @@ export function iAuthenticateWithTheFollowingUrlAndRequestBodyAs(
 
   const response = http.post(url, body, params);
 
-
   const success = check(response, { 
     [\`Auth successful (\${format})\`]: (r) => r.status === 200 || r.status === 201 
   });
   
   if (success) {
-  try {
-        const parsed = response.json();
-        globalThis.lastResponse = parsed;
-        console.log(\`✅ \${context} Response Captured. Keys: \${Object.keys(parsed).join(', ')}\`);
-        } catch (e) {
-        console.error(\`❌ Failed to parse JSON response for \${context}: \${response.body}\`);
-        globalThis.lastResponse = null;
+    try {
+      const parsed = response.json();
+      globalThis.lastResponse = parsed;
+      console.log(\`✅ \${context} Response Captured. Keys: \${Object.keys(parsed).join(', ')}\`);
+    } catch (e) {
+      console.error(\`❌ Failed to parse JSON response for \${context}: \${response.body}\`);
+      globalThis.lastResponse = null;
     }
-     
   } else {
     console.error(\`❌ Auth failed for \${context}. Status: \${response.status}\`);
     globalThis.lastResponse = null;
   }
 }
-/**
- * When I authenticate with the following url and request body as {string} (as {string})
- * This handles both:
- * 1. ...as "user":
- * 2. ...as "user" as "form":
- */
+
 export function iAuthenticateWithTheFollowingUrlAndRequestBodyAsAs(
   context${stringType}, 
   formatOrTable${anyType}, 
@@ -301,7 +391,6 @@ export function iAuthenticateWithTheFollowingUrlAndRequestBodyAsAs(
   let format = 'json';
   let dataTable;
 
-  // Argument shifting logic
   if (maybeTable === undefined) {
     format = 'json';
     dataTable = formatOrTable;
@@ -319,16 +408,9 @@ export function iAuthenticateWithTheFollowingUrlAndRequestBodyAsAs(
   let body;
   let params = { headers: {} };
 
-  /** * FORM FORMAT LOGIC
-   * k6 behavior: If the body is an object and Content-Type is x-www-form-urlencoded,
-   * k6 serializes the object into a query string (key=value&key2=value2).
-   */
   if (format === 'form') {
     params.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    /** * IMPORTANT: For k6 to auto-encode, the body MUST be a plain object.
-     * We ensure payload is clean of any non-serializable properties.
-     */
-    body = Object.assign({}, payload); 
+    body = Object.assign({}, payload);
   } else {
     params.headers['Content-Type'] = 'application/json';
     body = JSON.stringify(payload);
@@ -336,148 +418,545 @@ export function iAuthenticateWithTheFollowingUrlAndRequestBodyAsAs(
 
   const response = http.post(url, body, params);
 
-
   const success = check(response, { 
     [\`Auth successful (\${format})\`]: (r) => r.status === 200 || r.status === 201 
   });
   
   if (success) {
-  try {
-        const parsed = response.json();
-        globalThis.lastResponse = parsed;
-        console.log(\`✅ \${context} Response Captured. Keys: \${Object.keys(parsed).join(', ')}\`);
-        } catch (e) {
-        console.error(\`❌ Failed to parse JSON response for \${context}: \${response.body}\`);
-        globalThis.lastResponse = null;
+    try {
+      const parsed = response.json();
+      globalThis.lastResponse = parsed;
+      console.log(\`✅ \${context} Response Captured. Keys: \${Object.keys(parsed).join(', ')}\`);
+    } catch (e) {
+      console.error(\`❌ Failed to parse JSON response for \${context}: \${response.body}\`);
+      globalThis.lastResponse = null;
     }
-     
   } else {
     console.error(\`❌ Auth failed for \${context}. Status: \${response.status}\`);
     globalThis.lastResponse = null;
   }
 }
+
 /**
- * And I store "data.token" in "data/standard_user.json"
+ * And I store "response.path" in "data/file.json"
+ * Example: And I store "access_token" in "data/user.json"
  */
-export function iStoreIn(jsonPath${stringType}, fileName${stringType}) {
+export function iStoreIn(jsonPath, fileName) {
   const responseData = globalThis.lastResponse;
 
-  if (!responseData) return;
-    const value = jsonPath.split('.').reduce((acc, key) => acc && acc[key], responseData);
-  
-
-  // Debug: See what the server actually sent back
-  console.log(\`DEBUG: Response for \${fileName}: \`, JSON.stringify(responseData));
-
-  
-
-  // Check for undefined/null specifically so 0 or "" aren't ignored
-  if (value !== undefined && value !== null) {
-    globalThis.savedTokens = globalThis.savedTokens || {};
-    
-    // Store in the requested file path
-    globalThis.savedTokens[fileName] = value;
-    
-    // ALSO store as a clean alias (e.g., 'service_account' instead of 'data/service_account.json')
-    const alias = fileName.split('/').pop().replace('.json', '');
-    globalThis.savedTokens[alias] = value;
-
-console.log(\`✅ Value staged for file write: \${fileName}\`);  } else {
-    console.error(\`❌ Could not find path "\${jsonPath}" in the response. JSON keys found: \${Object.keys(responseData).join(', ')}\`);
+  if (!responseData) {
+    console.error('❌ No response data to store. Did an HTTP request run?');
+    return;
   }
+
+  // Navigate JSON path (e.g., "user.token" → responseData.user.token)
+  const value = jsonPath.split('.').reduce((acc, key) => {
+    return acc && acc[key] !== undefined ? acc[key] : undefined;
+  }, responseData);
+
+  if (value === undefined) {
+    console.error(\`❌ Path "\${jsonPath}" not found in response. Keys:\`, Object.keys(responseData));
+    return;
+  }
+
+  // Stage for writing in handleSummary
+  globalThis.savedTokens = globalThis.savedTokens || {};
+  globalThis.savedTokens[fileName] = value;
+
+  // Also store alias (e.g., 'user' from 'data/user.json')
+// Remove path and .json extension
+const alias = fileName.split(/[\\/]/).pop()?.replace(/\\.json$/, '') || fileName;
+globalThis.savedTokens[alias] = value;
+
+  console.log(\`✅ Staged token for "\${fileName}": \${typeof value === 'string' ? '***' : JSON.stringify(value)}\`);
 }
-/**
- * Background Auth: Applies the previously stored token to headers
+  /**
+ * Background: I am authenticated as a "user"
+ * Applies stored token to default headers
  */
-export function iAmAuthenticatedAsA(userType${stringType}) {
-  const memoryKey = \`data/\${userType}.json\`;
-  const token = globalThis.savedTokens && globalThis.savedTokens[memoryKey];
-  
+export function iAmAuthenticatedAsA(userType) {
+  const token = globalThis.savedTokens?.[\`data/\${userType}.json\`] || 
+                globalThis.savedTokens?.[userType];
+
   if (token) {
-    defaultHeaders['Authorization'] = \`Bearer \${token}\`;
-    console.log(\`Using memory-stored token for \${userType}\`);
+    defaultHeaders['Authorization'] = \`Bearer $\{token}\`;
+    console.log(\`🔑 Using token for $\{userType}\`);
   } else {
-    // Fallback: try to read the INITIAL file created during project init
-    try {
-      const userData = JSON.parse(open(\`../data/\${userType}.json\`));
-      if (userData.token) {
-        defaultHeaders['Authorization'] = \`Bearer \${userData.token}\`;
-      }
-    } catch (e) {
-      console.warn(\`No token found for \${userType} in memory or file.\`);
-    }
+    console.warn(\`⚠️ No token found for $\{userType}\`);
   }
 }
-
-/**
- * And I set the default headers:
- */
-export function iSetTheDefaultHeaders(data${anyType}) {
-  if (data && data.length > 0) {
-    Object.assign(defaultHeaders, data[0]);
-  }
-}
-
-/**
- * When I make a GET request to "..."
- */
-export function iMakeAGetRequestTo(endpoint${stringType}) {
-  const url = \`\${baseUrl}\${endpoint}\`;
-  const response = http.get(url, { headers: defaultHeaders });
-  
-  check(response, {
-    'status is 200 or 404': (r) => r.status === 200 || r.status === 404,
-    'has valid headers': (r) => r.request.headers['Authorization'] !== undefined
-  });
-}
-
-/**
- * Then the response status should be ...
- */
-export function theResponseStatusShouldBe(expectedStatus${mixedType}) {
-  const status = typeof expectedStatus === 'string' ? parseInt(expectedStatus) : expectedStatus;
-}
-
-export function theResponseShouldContain(field${stringType}) {
-  console.log(\`Verified: Response contains \${field}\`);
-}
-
-/**
- * Given I have the following post data:
- */
-export function iHaveTheFollowingPostData(content${stringType}) {
-  return JSON.parse(content);
-}
-
-/**
- * When I make a POST request to "..."
- */
-export function iMakeAPostRequestTo(endpoint${stringType}) {
-  const url = \`\${baseUrl}\${endpoint}\`;
-  const payload = JSON.stringify({ title: 'k6 test' });
-  const response = http.post(url, payload, { headers: defaultHeaders });
-  
-  check(response, {
-    'POST status is 201': (r) => r.status === 201
-  });
-}
-  /** --- Browser Steps (@browser) --- **/
+/* ===== BROWSER STEPS ===== */
 
 export async function iNavigateToThePage(page, url${stringType}) {
-  // If URL is relative, prepend baseUrl
-  const fullUrl = url.startsWith('http') ? url : \`\${baseUrl}\${url}\`;
-  await page.goto(fullUrl);
+  let effectiveBase = baseUrl;
+  if (typeof effectiveBase !== 'string' || effectiveBase.trim() === '') {
+    console.warn('Invalid baseUrl detected:', baseUrl, '— using fallback');
+    effectiveBase = 'https://test.k6.io';
+  }
+  const fullUrl = url.startsWith('http') ? url : \`\${effectiveBase}\${url.startsWith('/') ? '' : '/'}\${url}\`;
+  console.log(\`Navigating to: \${fullUrl} (base: \${effectiveBase})\`);
+  await page.goto(fullUrl, { waitUntil: 'networkidle', timeout: 60000 });
 }
 
 export async function iClickTheButton(page, selector${stringType}) {
   await page.locator(selector).click();
 }
 
-export async function iSeeTheTextOnThePage(page, text${stringType}) {
-  const content = await page.content();
-  check(page, {
-    [\`Text "\${text}" is visible\`]: () => content.includes(text)
+export async function iShouldSeeTheText(page${anyType}, expectedText${stringType}) {
+  // Reuse your existing logic or copy from iSeeTheTextOnThePage
+  let locator = page.getByRole('heading', { name: expectedText, exact: false });
+  if ((await locator.count()) === 0) {
+    locator = page.getByText(expectedText, { exact: false }).first();
+  }
+
+  try {
+    await locator.waitFor({ state: 'visible', timeout: 30000 });
+    const count = await locator.count();
+    console.log(\`Found \${count} visible elements matching "\${expectedText}"\`);
+    check(count >= 1, {
+      [\`Text/heading containing "\${expectedText}" is visible\`]: true
+    });
+  } catch (e) {
+    console.error(\`Text wait failed for "\${expectedText}":\`, e.message || e);
+    check(false, { [\`Text/heading containing "\${expectedText}" is visible\`]: false });
+  }
+}
+
+/* === Additional Browser Steps === */
+
+export async function iClickOnTheElement(page, selector) {
+  const locator = page.locator(selector);
+  await locator.waitFor({ state: 'visible', timeout: 20000 });
+  await locator.click();
+  console.log(\`✅ Clicked element: \${selector}\`);
+}
+
+export async function iFillTheFieldWith(page, selector, value) {
+  const locator = page.locator(selector);
+  await locator.waitFor({ state: 'visible', timeout: 15000 });
+  await locator.fill(value);
+  console.log(\`✅ Filled field \${selector} with "\${value}"\`);
+}
+
+export async function thePageTitleShouldBe(page, expectedTitle${stringType}) {
+  await page.waitForLoadState('networkidle');
+  const title = await page.title();
+  check(title, {
+    [\`Page title is "\${expectedTitle}"\`]: (t) => t === expectedTitle
   });
+}
+
+export async function theCurrentUrlShouldContain(page, expectedFragment${stringType}) {
+  const url = page.url();
+  check(url, {
+    [\`URL contains "\${expectedFragment}"\`]: (u) => u.includes(expectedFragment)
+  });
+}
+
+export async function iShouldSeeTheElement(page, selector) {
+  const locator = page.locator(selector);
+  await locator.waitFor({ state: 'visible', timeout: 20000 });
+  const isVisible = await locator.isVisible();
+  if (!isVisible) throw new Error(\`Element not visible: \${selector} \`);
+  console.log(\`✅ Verified visibility of element: \${selector}\`);
+}
+
+export async function iShouldNotSeeTheText(page, text${stringType}) {
+  const locator = page.getByText(text, { exact: false });
+  const isHidden = (await locator.count()) === 0 || !(await locator.isVisible());
+  check(isHidden, {
+    [\`Text "\${text}" is not visible\`]: (hidden) => hidden === true
+  });
+}
+
+export async function iSelectFromTheDropdown(page, option${stringType}, selector${stringType}) {
+  const locator = page.locator(selector);
+  await locator.selectOption(option);
+  console.log(\`Selected "\${option}" from dropdown "\${selector}"\`);
+}
+/**
+ * When I drag the element "..." to "..."
+ * Example: I drag the element "#draggable" to "#droppable"
+ */
+export async function iDragTheElementTo(page${anyType}, sourceselector${stringType}, targetselector${stringType}) {
+  try {
+    const source = page.locator(sourceSelector);
+    const target = page.locator(targetSelector);
+
+    // Wait for both elements to be visible and stable
+    await source.waitFor({ state: 'visible', timeout: 15000 });
+    await target.waitFor({ state: 'visible', timeout: 15000 });
+
+    // Perform the drag-and-drop
+    await source.dragTo(target, {
+      // Optional: force the action if element is covered / small
+      force: true,
+      // Optional: timeout for the whole operation
+      timeout: 30000,
+    });
+
+    console.log(\`Successfully dragged "\${sourceSelector}" to "\${targetSelector}"\`);
+
+    // Optional: small assertion that drop area changed (if it has visual feedback)
+    // await expect(target).toHaveText('Dropped!'); // if you have expect imported
+  } catch (error) {
+    console.error(\`Drag failed from "\${sourceSelector}" to "\${targetSelector}":\`, error.message || error);
+    throw error; // re-throw to fail the iteration
+  }
+}
+  /**
+ * And I drag to "#droppable"
+ * This step assumes the previous step returned a source locator
+ * Example usage:
+ *   When I get element by selector "#draggable"
+ *   And I drag to "#droppable"
+ */
+${isTS
+        ? `export async function iDragTo(page${anyType}, targetselector${stringType}, sourceLocator?${anyType}) {`
+        : `export async function iDragTo(page, targetSelector, sourceLocator) {`
+      }
+
+  try {
+    // If no sourceLocator was passed (previous step didn't return it), fail early
+    if (!sourceLocator) {
+      throw new Error("No source locator provided. Did you use 'I get element by selector' before this step?");
+    }
+
+    const target = page.locator(targetSelector);
+    await target.waitFor({ state: 'visible', timeout: 15000 });
+
+    // Perform drag-and-drop from source → target
+    await sourceLocator.dragTo(target, {
+      force: true,           // helpful if element is partially covered
+      timeout: 30000,
+    });
+
+    console.log(\`Dragged source element to target: \${targetSelector}\`);
+  } catch (error) {
+    console.error(\`Drag to "\${targetSelector}" failed:\`, error.message || error);
+    throw error; // fail the iteration
+  }
+}
+export async function iWaitForTheElementToBeVisible(page, selector${stringType}) {
+  const locator = page.locator(selector);
+  await locator.waitFor({ state: 'visible', timeout: 30000 });
+}
+  /**
+ * And I get element by selector "..."
+ * (just locates it, waits for visibility, but doesn't perform action)
+ */
+export async function iGetElementBySelector(page${anyType}, selector${stringType}) {
+  const locator = page.locator(selector);
+  await locator.waitFor({ state: 'visible', timeout: 15000 });
+  console.log(\`Found element by selector: \${ selector }\`);
+  return locator; // useful if you want to chain later
+}
+
+/**
+ * And I find element by value "Male"
+ * (uses getByLabel – good for form labels)
+ */
+export async function iFindElementByLabel(page${anyType}, labelText${stringType}) {
+  const locator = page.getByLabel(labelText, { exact: false });
+  await locator.waitFor({ state: 'visible', timeout: 15000 });
+  console.log(\`Found element by label: "\${labelText}"\`);
+  return locator;
+}
+
+/**
+ * And I find element by textarea "..."
+ * (uses getByPlaceholder or getByRole for textarea)
+ */
+export async function iFindElementByTextarea(page${anyType}, placeholderOrLabel${stringType}) {
+  let locator;
+  // Try by placeholder first
+  locator = page.getByPlaceholder(placeholderOrLabel, { exact: false });
+  
+  // Fallback to label or role if placeholder not found
+  if ((await locator.count()) === 0) {
+    locator = page.getByLabel(placeholderOrLabel, { exact: false })
+               .or(page.getByRole('textbox', { name: placeholderOrLabel }));
+  }
+
+  await locator.waitFor({ state: 'visible', timeout: 15000 });
+  console.log(\`Found textarea by placeholder / label: "\${placeholderOrLabel}"\`);
+  return locator;
+}
+
+
+
+/**
+ * And I click
+ * Clicks the currently focused element (or the last interacted one).
+ * Uses real mouse click instead of keyboard Enter.
+ */
+export async function iClick(page${anyType}) {
+  try {
+    // Get the currently focused element (active element)
+    const focusedElement = await page.evaluateHandle(() => document.activeElement);
+
+    if (!focusedElement || focusedElement.asElement() === null) {
+      console.warn('No focused element found for click');
+      return;
+    }
+
+    // Convert Handle to Locator
+    const locator = page.locator(focusedElement.asElement());
+
+    // Ensure it's visible and clickable
+    await locator.waitFor({ state: 'visible', timeout: 10000 });
+
+    // Perform real mouse click
+    await locator.click({
+      force: true,           // click even if slightly covered
+      timeout: 10000,
+    });
+
+    console.log('Performed real mouse click on focused element');
+  } catch (error) {
+    console.error('Click failed on focused element:', error.message || error);
+    throw error; // fail the step if needed
+  }
+}
+function getNth(locator${anyType}, nthStr${stringType}) {
+  if (!nthStr) return locator;
+  const n = parseInt(nthStr, 10);
+  if (isNaN(n) || n < 1) return locator;
+  return locator.nth(n - 1); // k6 uses 0-based index
+}
+
+/**
+ * And I wait "X" seconds
+ */
+export async function iWaitSeconds(page${anyType}, secondsStr${stringType}) {
+  const seconds = parseFloat(secondsStr);
+  if (isNaN(seconds) || seconds < 0) {
+    throw new Error(\`Invalid wait time: "\${secondsStr}"\`);
+  }
+  await sleep(seconds); // k6's sleep takes seconds
+}
+
+/**
+ * And I wait "X" milliseconds
+ */
+export async function iWaitMilliseconds(page${anyType}, milliseconds${stringType}) {
+  const timeInMs = parseFloat(milliseconds);
+  if (isNaN(timeInMs) || timeInMs < 0) {
+    throw new Error(\`Invalid wait time: "\${milliseconds}" milliseconds\`);
+  }
+  console.log(\`Waiting for \${milliseconds} ms\`);
+  
+  // Correct k6 browser method
+  await page.waitForTimeout(timeInMs);
+}
+
+/**
+ * And I find input element by placeholder text "..."
+ * Uses getByPlaceholder
+ */
+export async function iFindInputElementByPlaceholderText(page${anyType}, placeholder${stringType}) {
+  const locator = page.getByPlaceholder(placeholder, { exact: false });
+  await locator.waitFor({ state: 'visible', timeout: 20000 });
+  const count = await locator.count();
+  console.log(\`Found \${count} input(s) with placeholder "\${placeholder}"\`);
+  return locator;
+}
+
+/**
+ * And I find element by text "..."
+ * Uses getByText (substring match)
+ */
+export async function iFindElementByText(page${anyType}, text${stringType}) {
+  const locator = page.getByText(text, { exact: false });
+  await locator.waitFor({ state: 'visible', timeout: 20000 });
+  const count = await locator.count();
+  console.log(\`Found \${count} element(s) containing text "\${text}"\`);
+  return locator;
+}
+
+/**
+ * And I find elements by text "..."
+ * Similar to above, but emphasizes multiple matches
+ */
+export async function iFindElementsByText(page${anyType}, text${stringType}) {
+  const locator = page.getByText(text, { exact: false });
+  await locator.waitFor({ state: 'visible', timeout: 20000 });
+  const count = await locator.count();
+  console.log(\`Found \${count} elements containing text "\${text}"\`);
+  return locator;
+}
+
+/**
+ * And I find button by text "..."
+ * Uses getByRole('button')
+ */
+export async function iFindButtonByText(page${anyType}, buttonText${stringType}) {
+  const locator = page.getByRole('button', { name: buttonText, exact: false });
+  await locator.waitFor({ state: 'visible', timeout: 20000 });
+  const count = await locator.count();
+  console.log(\`Found \${count} button(s) with text "\${buttonText}"\`);
+  return locator;
+}
+/**
+ * And I find element by value "..."
+ * Finds input elements (input, textarea, select) that have the exact value attribute
+ * Example: And I find element by value "Submit"
+ */
+export async function iFindElementByValue(page${anyType}, valueText${stringType}) {
+  // Look for elements where value attribute matches exactly
+const locator = page.locator(\`input[value="\${valueText}"], textarea[value="\${valueText}"]\`);
+  try {
+    await locator.waitFor({ state: 'visible', timeout: 20000 });
+    const count = await locator.count();
+    
+    if (count === 0) {
+      console.warn(\`No element found with value attribute "\${valueText}"\`);
+      // Optional fallback: check inner text or other attributes if needed
+      // locator = page.locator(\`: text("\${valueText}")\`);
+    }
+
+    console.log(\`Found \${ count } element(s) with value attribute "\${valueText}"\`);
+
+    // Optional: log tag names of matches
+    if (count > 0) {
+      const tags = await locator.evaluateAll(els => els.map(el => el.tagName.toLowerCase()));
+      console.log(\`Matching elements are: \${ tags.join(', ') } \`);
+    }
+
+    return locator;
+  } catch (error) {
+    console.error(\`Could not find element by value "\${valueText}": \`, error.message || error);
+    check(false, { [\`Element with value "\${valueText}" is found\`]: false });
+    throw error;
+  }
+}
+
+/**
+ * And I find element by role "..."
+ * Finds elements using ARIA role (button, textbox, link, heading, etc.)
+ * Example: And I find element by role "button"
+ *          And I find element by role "heading" "Welcome"
+ */
+${isTS
+        ? `export async function iFindElementByRole(page: any, roleName: string, nameOrOptions?: string | object) {`
+        : `export async function iFindElementByRole(page, roleName, nameOrOptions) {`
+      } 
+  let locator;
+
+  // If only role is given (no name)
+  if (!nameOrOptions) {
+    locator = page.getByRole(roleName);
+  } 
+  // If role + name/text is given (second argument is string)
+  else if (typeof nameOrOptions === 'string') {
+    locator = page.getByRole(roleName, { name: nameOrOptions, exact: false });
+  } 
+  // If options object is passed (advanced usage)
+  else {
+    locator = page.getByRole(roleName, nameOrOptions);
+  }
+
+  try {
+    await locator.waitFor({ state: 'visible', timeout: 20000 });
+    const count = await locator.count();
+    console.log(\`Found \${ count } element(s) by role "\${roleName}"\`);
+
+    if (typeof nameOrOptions === 'string') {
+      console.log(\`  with name containing "\${nameOrOptions}"\`);
+    }
+
+    return locator;
+  } catch (error) {
+    console.error(\`Could not find element by role "\${roleName}": \`, error.message || error);
+    check(false, { [\`Element by role "\${roleName}" is found\`]: false });
+    throw error;
+  }
+}
+/**
+ * And I find buttons by text "..."
+ * Same as above, but name emphasizes multiple
+ */
+export async function iFindButtonsByText(page${anyType}, buttonText${stringType}) {
+  const locator = page.getByRole('button', { name: buttonText, exact: false });
+  await locator.waitFor({ state: 'visible', timeout: 20000 });
+  const count = await locator.count();
+  console.log(\`Found \${count} button(s) with text "\${buttonText}"\`);
+  return locator;
+}
+/**
+ * And I find element by name "..."
+ * Finds elements using getByRole(name) or [name="..."] attribute
+ * Example: And I find element by name "username"
+ */
+export async function iFindElementByName(page${anyType}, labelText${stringType}) {
+  const locator = page.getByLabel(labelText, { exact: false });
+  await locator.waitFor({ state: 'visible', timeout: 20000 });
+  console.log(\`Found input by label: "\${labelText}"\`);
+  return locator;
+}
+/**
+ * And I find element by Id "..."
+ * Uses locator('#id')
+ */
+export async function iFindElementById(page${anyType}, id${stringType}) {
+  // Ensure ID starts with # if user forgets
+  const selector = id.startsWith('#') ? id : \`#\${id}\`;
+  const locator = page.locator(selector);
+  await locator.waitFor({ state: 'visible', timeout: 20000 });
+  console.log(\`Found element by ID: \${selector}\`);
+  return locator;
+}
+/**
+ * And I click "N"st element by selector "..."
+ * Example: And I click "1"st element by selector ".btn"
+ */
+export async function iClickNthElementBySelector(page${anyType}, n${stringType}, selector${stringType}) {
+  const index = parseInt(n.replace(/\D/g, '')) - 1; // "1"st → 0, "2"nd → 1, etc.
+  if (isNaN(index)) throw new Error(\`Invalid nth value: \${ n } \`);
+
+  const locator = page.locator(selector).nth(index);
+  await locator.waitFor({ state: 'visible', timeout: 15000 });
+  await locator.click();
+  console.log(\`Clicked the \${ n } element matching selector: \${ selector } \`);
+}
+/**
+ * And I click on exact text "..."
+ * Clicks the first element that **exactly matches** the given visible text.
+ * Uses page.getByText(..., { exact: true })
+ */
+export async function iClickOnExactText(page${anyType}, text${stringType}) {
+  // Use exact match to avoid partial matches like "Submit Form" when you want "Submit"
+  const locator = page.getByText(text, { exact: true });
+  
+  try {
+    await locator.waitFor({ state: 'visible', timeout: 20000 });
+    const count = await locator.count();
+    if (count === 0) {
+      throw new Error(\`No element found with exact text: "\${text}"\`);
+    }
+    if (count > 1) {
+      console.warn(\`⚠️ Multiple (\${count}) elements found with exact text "\${text}". Clicking the first.\`);
+    }
+
+    await locator.first().click(); // safest: click first even if multiple
+    console.log(\`✅ Clicked element with exact text: "\${text}"\`);
+  } catch (error) {
+    console.error(\`Failed to click exact text "\${text}":\`, error.message || error);
+    throw error;
+  }
+}
+/**
+ * And I fill the "N"rd field element by selector "..." with "..."
+ * Example: And I fill the "3"rd field element by selector "input" with "08012345678"
+ */
+export async function iFillNthFieldBySelector(page${anyType}, n${stringType}, selector${stringType}, value${stringType}) {
+  const index = parseInt(n.replace(/\D/g, '')) - 1;
+  if (isNaN(index)) throw new Error(\`Invalid nth value: \${ n } \`);
+
+  const locator = page.locator(selector).nth(index);
+  await locator.waitFor({ state: 'visible', timeout: 15000 });
+  await locator.fill(value);
+  console.log(\`Filled the \${ n } element matching "\${selector}" with "\${value}"\`);
 }
 `;
 
@@ -513,7 +992,7 @@ coverage/
         forceConsistentCasingInFileNames: true,
         types: ["k6"],
       },
-      include: ["src/**/*", "steps/**/*"],
+      include: ["src/**/*", "steps/**/*", "**/*.ts"],
       exclude: ["node_modules"],
     };
 

@@ -11,6 +11,7 @@ export interface Scenario {
   name: string;
   steps: Step[];
   tags: string[];
+  background?: Step[];
   description?: string;
 }
 

@@ -1,3 +1,4 @@
+// src/generators/k6-script.generator.ts
 import { Scenario, ScenarioMetadata, ProjectConfig } from "../types";
 
 export class K6ScriptGenerator {
@@ -10,32 +11,55 @@ export class K6ScriptGenerator {
 /**
  * Generated k6 test script
  */
-globalThis.savedTokens = {};
-globalThis.lastResponse = {};
+globalThis.savedTokens = globalThis.savedTokens || {};
+globalThis.lastResponse = globalThis.lastResponse || {};
 `;
 
     const imports = this.generateImports(config, metadata);
     const options = this.generateOptions(metadata);
     const testFunction = this.generateTestFunction(scenarios, metadata);
 
-    return `
-${header}
-${imports}
-
-${options}
-
-export function setup() {
-  // We must return an object here to initialize the "data" channel
-  return { v: Date.now() };
-}
-
-${testFunction}
-
-export function teardown(tokensFromDefault) {
+    // ✅ Resolve teardown based on config.language NOW (in Node.js)
+    const teardownFn = config.language === "ts"
+      ? `export function teardown(tokensFromDefault: Record<string, any>) {
   // Capture return value from default function
   globalThis.exportedTokens = tokensFromDefault;
-}
-export function handleSummary(data) {
+}`
+      : `export function teardown(tokensFromDefault) {
+  // Capture return value from default function
+  globalThis.exportedTokens = tokensFromDefault;
+}`;
+
+    // ✅ Resolve handleSummary based on config.language NOW
+    const handleSummaryFn = config.language === "ts"
+      ? `export function handleSummary(data: any): Record<string, any> {
+  const reports: Record<string, any> = {
+    './reports/summary.html': htmlReport(data),
+    './reports/results.json': JSON.stringify(data),
+    stdout: textSummary(data, { indent: ' ', enableColors: true }),
+  };
+
+  console.log('--- Summary File Write Audit ---');
+  
+  let tokens = data.teardown_data || globalThis.exportedTokens || globalThis.savedTokens || {};
+  if (data.setup_data && !Object.keys(tokens).length) {
+    tokens = data.setup_data;
+  }
+
+  const keys = Object.keys(tokens).filter(k => k.endsWith('.json'));
+  console.log('Tokens found:', keys.length > 0 ? keys.join(', ') : 'None');
+
+  for (const [path, tokenValue] of Object.entries(tokens)) {
+    if (path.endsWith('.json')) {
+      const fullPath = path.startsWith('./') ? path : \`./\${path}\`;
+      reports[fullPath] = JSON.stringify(typeof tokenValue === 'string' ? { access_token: tokenValue } : tokenValue, null, 2);
+      console.log(\`✅ Writing: \${fullPath}\`);
+    }
+  }
+
+  return reports;
+}`
+      : `export function handleSummary(data) {
   const reports = {
     './reports/summary.html': htmlReport(data),
     './reports/results.json': JSON.stringify(data),
@@ -44,12 +68,9 @@ export function handleSummary(data) {
 
   console.log('--- Summary File Write Audit ---');
   
-  // Try to find tokens in teardown_data (the return value of default function)
   let tokens = data.teardown_data || globalThis.exportedTokens || globalThis.savedTokens || {};
-  
-  // If k6 nested it due to the async/await structure
   if (data.setup_data && !Object.keys(tokens).length) {
-      tokens = data.setup_data;
+    tokens = data.setup_data;
   }
 
   const keys = Object.keys(tokens).filter(k => k.endsWith('.json'));
@@ -65,8 +86,27 @@ export function handleSummary(data) {
 
   return reports;
 }`;
-  }
 
+    // ✅ Now embed the resolved strings into the final output
+    return `
+${header}
+${imports}
+
+${options}
+
+export function setup() {
+  // We must return an object here to initialize the "data" channel
+  return { v: Date.now() };
+}
+
+${testFunction}
+
+${teardownFn}
+
+${handleSummaryFn}
+`;
+
+  }
   private generateImports(
     config: ProjectConfig,
     metadata: ScenarioMetadata[],
@@ -85,7 +125,7 @@ export function handleSummary(data) {
       baseImports.push('import { browser } from "k6/browser";');
     }
 
-    baseImports.push(`import * as steps from "../steps/sample.steps.${ext}";`);
+    baseImports.push(`import * as steps from "../steps/sample.steps.${ext}"; `);
 
     return baseImports.join("\n");
   }
@@ -93,60 +133,97 @@ export function handleSummary(data) {
   private generateOptions(metadata: ScenarioMetadata[]): string {
     let vus = 1;
     let duration = "30s";
+    let iterations: number | null = null;
     let stages: any[] = [];
     let thresholds: Record<string, any> = {};
     const hasBrowser = metadata.some((m) => m.tags?.includes("browser"));
 
+    // 1. Parse Metadata
     for (const meta of metadata) {
       if (meta.vus) vus = Math.max(vus, meta.vus);
       if (meta.duration) duration = meta.duration;
       if (meta.thresholds) Object.assign(thresholds, meta.thresholds);
-
+      const iterTag = meta.tags?.find(t => t.startsWith("iterations:"));
+      if (iterTag) {
+        iterations = parseInt(iterTag.split(":")[1]);
+      }
       if (meta.stages) {
         stages = meta.stages.split(",").map((s) => {
           const [d, t] = s.split("-");
-          return { duration: d, target: parseInt(t) };
+          return { duration: d.trim(), target: parseInt(t.trim()) };
         });
       }
     }
 
+    // 2. Prepare k6Options object
+    const k6Options: any = {};
+
+    // 3. Add Thresholds (Always allowed at top level)
     const formattedThresholds: Record<string, any> = {};
     for (const [key, value] of Object.entries(thresholds)) {
       if (this.isValidK6Metric(key)) {
         formattedThresholds[key] = [value];
       }
     }
-
-    // Build the k6 options object
-    const k6Options: any = {};
-
-    if (stages.length > 0) {
-      k6Options.stages = stages;
-    } else {
-      k6Options.vus = vus;
-      k6Options.duration = duration;
-    }
-
     if (Object.keys(formattedThresholds).length > 0) {
       k6Options.thresholds = formattedThresholds;
     }
 
     if (hasBrowser) {
-      k6Options.scenarios = {
-        default: {
-          executor: "shared-iterations",
-          options: {
-            browser: {
-              type: "chromium",
-            },
-          },
+      // Determine the executor
+      const executor = iterations ? "shared-iterations" : (stages.length > 0 ? "ramping-vus" : "constant-vus");
+
+      const scenario: any = {
+        executor: executor,
+      };
+
+      // Apply workload based on executor type
+      if (executor === "shared-iterations") {
+        scenario.vus = vus;
+        scenario.iterations = iterations;
+      } else if (executor === "ramping-vus") {
+        scenario.stages = stages;
+        scenario.startVUs = vus;
+      } else {
+        // constant-vus
+        scenario.vus = vus;
+        scenario.duration = duration;
+      }
+
+      // Add browser options
+      scenario.options = {
+        browser: {
+          type: "chromium",
         },
       };
+
+      k6Options.scenarios = {
+        default: scenario
+      };
+
+    } else {
+      // Protocol-based logic
+      if (iterations) {
+        k6Options.scenarios = {
+          default: {
+            executor: "shared-iterations",
+            vus: vus,
+            iterations: iterations,
+          }
+        };
+      } else {
+        if (stages.length > 0) {
+          k6Options.stages = stages;
+        } else {
+          k6Options.vus = vus;
+          k6Options.duration = duration;
+        }
+      }
     }
 
-    return `export const options = ${JSON.stringify(k6Options, null, 2)};`;
+    return `export const options = ${JSON.stringify(k6Options, null, 2)
+      };`;
   }
-
   private isValidK6Metric(metricName: string): boolean {
     const validMetrics = [
       "http_req_duration",
@@ -191,86 +268,109 @@ export function handleSummary(data) {
   }
 
   private extractArguments(text: string): string {
-    const stringMatches = text.match(/"([^"]*)"|'([^']*)'/g) || [];
-    const intMatches = text.match(/\b\d+\b/g) || [];
-    return [...stringMatches, ...intMatches].join(", ");
+    // Only extract quoted strings (double or single quotes)
+    const matches = text.match(/"([^"]*)"|'([^']*)'/g) || [];
+    // Return the quoted literals as-is (e.g., '"hello"', "'1'")
+    return matches.join(", ");
   }
 
-  private generateTestFunction(
-    scenarios: Scenario[],
-    metadata: ScenarioMetadata[],
-  ): string {
-    const allStepCalls = scenarios
-      .map((scenario) => {
-        const isBrowser = scenario.tags?.includes("browser");
-        const stepLines = [
-          `  group(${JSON.stringify(scenario.name)}, function () {`,
-        ];
+  // Inside K6ScriptGenerator.ts
 
-        if (isBrowser) {
-          // Safety initialization
-          stepLines.push(`    let context, page;`);
-          stepLines.push(`    try {`);
-          stepLines.push(`      context = browser.newContext();`);
-          stepLines.push(
-            `      if (!context) throw new Error("Browser Context could not be created.");`,
-          );
-          stepLines.push(`      page = context.newPage();`);
-          stepLines.push(`      (async () => {`);
-          stepLines.push(`        try {`);
-        }
+  private generateTestFunction(scenarios: Scenario[], metadata: ScenarioMetadata[]): string {
+    const hasAnyBrowser = metadata.some((m) => m.tags?.includes("browser"));
+    const lines: string[] = [];
 
+    // Open browser if any scenario uses it
+    if (hasAnyBrowser) {
+      lines.push(`let page;`);
+      lines.push(`try {`);
+      lines.push(`  page = await browser.newPage();`);
+      lines.push(`  console.log('Browser page opened once for all scenarios');`);
+      // Set fallback base URL only if needed
+      lines.push(`  steps.theBaseUrlIs("https://demoqa.com");`);
+      lines.push(`  console.log('Fallback baseUrl set to:', globalThis.baseUrl || 'not set');`);
+      lines.push(``);
+    }
+
+    // Process ALL scenarios (both browser and HTTP)
+    scenarios.forEach((scenario) => {
+      const isBrowser = scenario.tags?.includes("browser");
+
+      // Init group
+      lines.push(`  group(${JSON.stringify(scenario.name + " - init")}, () => {`);
+      lines.push(`    console.log('Initiating scenario: ${scenario.name}');`);
+      lines.push(`  });`);
+
+      if (isBrowser) {
+        lines.push(`  try {`);
         scenario.steps.forEach((step) => {
           const name = this.normalizeStepText(step.text);
-          const args = this.extractArguments(step.text);
-          const callParams = [];
+          const argsStr = this.extractArguments(step.text);
+          const args = argsStr ? argsStr.split(/,\s*/).filter(Boolean) : [];
 
-          if (isBrowser) callParams.push("page");
-          if (args && args.trim().length > 0) callParams.push(args);
-          if (step.argument) {
-            callParams.push(JSON.stringify(step.argument));
+          const needsPage = [
+            "navigate", "click", "see", "fill", "type", "press", "waitfor", "wait", "locator",
+            "select", "title", "url", "element", "shouldsee", "shouldnotsee"
+          ].some(kw => name.toLowerCase().includes(kw)) &&
+            !["thebaseurlis", "thebaseurl"].some(kw => name.toLowerCase().includes(kw));
+
+          const params: string[] = [];
+          if (needsPage) {
+            params.push("page");
+          }
+          params.push(...args);
+          if (step.argument && typeof step.argument === 'string') {
+            params.push(JSON.stringify(step.argument));
           }
 
-          const awaitPrefix = isBrowser ? "await " : "";
-          const indent = isBrowser ? "          " : "    ";
-          stepLines.push(
-            `${indent}${awaitPrefix}steps.${name}(${callParams.join(", ")});`,
-          );
+          const callPrefix = needsPage || params.length > 1 ? 'await ' : '';
+          lines.push(`    ${callPrefix}steps.${name}(${params.join(", ")});`);
         });
+        lines.push(`  } catch (err) {`);
+        lines.push(`    console.error('Error in ${scenario.name}:', err);`);
+        lines.push(`    console.error('Stack:', err && err.stack ? err.stack : 'No stack');`);
+        lines.push(`  }`);
+      } else {
+        // Non-browser (HTTP/API) steps
+        scenario.steps.forEach((step) => {
+          const name = this.normalizeStepText(step.text);
+          const argsStr = this.extractArguments(step.text);
+          const args = argsStr ? argsStr.split(/,\s*/).filter(Boolean) : [];
 
-        if (isBrowser) {
-          stepLines.push(`        } catch (err) {`);
-          stepLines.push(
-            `          console.error('Step Execution Error: ' + err.message);`,
-          );
-          stepLines.push(`        } finally {`);
-          stepLines.push(`          if (page) page.close();`);
-          stepLines.push(`          if (context) context.close();`);
-          stepLines.push(`        }`);
-          // Close the async arrow function and the IIFE call
-          stepLines.push(`      })();`);
-          stepLines.push(`    } catch (e) {`);
-          stepLines.push(
-            `      console.error('Browser Initialization Failed: ' + e.message);`,
-          );
-          stepLines.push(`    }`);
-        }
+          const params: string[] = [];
+          params.push(...args);
+          if (step.argument && typeof step.argument === 'string') {
+            params.push(JSON.stringify(step.argument));
+          }
+          if (step.argument && Array.isArray(step.argument)) {
+            params.push(JSON.stringify(step.argument));
+          }
 
-        stepLines.push(`    sleep(1);`);
-        stepLines.push(`  });`);
+          lines.push(`  steps.${name}(${params.join(", ")});`);
+        });
+      }
 
-        return stepLines.join("\n");
-      })
-      .join("\n\n");
+      // Cleanup group
+      lines.push(`  group(${JSON.stringify(scenario.name + " - cleanup")}, () => {`);
+      lines.push(`    console.log('Finished: ${scenario.name}');`);
+      lines.push(`  });`);
+      lines.push(`  sleep(1);`);
+      lines.push(``);
+    });
 
-    // The outer try/finally ensures globalThis.savedTokens is ALWAYS returned
-    // even if a group crashes.
-    return `export default function () {
-  try {
-${allStepCalls}
-  } finally {
-    return globalThis.savedTokens;
-  }
+    // Close browser if opened
+    if (hasAnyBrowser) {
+      lines.push(`} finally {`);
+      lines.push(`  if (page) {`);
+      lines.push(`    try { await page.close(); await sleep(0.5); } catch (e) { console.warn('Final page close failed:', e); }`);
+      lines.push(`  }`);
+      lines.push(`}`);
+    }
+
+    return `
+export default async function () {
+${lines.join("\n")}
+  return globalThis.savedTokens;
 }`;
   }
 }
