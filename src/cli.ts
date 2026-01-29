@@ -19,7 +19,7 @@ program
   .command("init")
   .description("Initialize a new k6-cucumber project")
   .option("-l, --lang <language>", "Programming language (js or ts)", "ts")
-  .argument("[path]", "Output directory path", "./k6-test-project")
+  .argument("[path]", "Output directory path", ".")
   .action(async (path, options) => {
     const initCmd = new InitCommand();
     await initCmd.execute(path, options.lang as "js" | "ts");

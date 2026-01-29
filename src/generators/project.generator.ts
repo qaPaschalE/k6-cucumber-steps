@@ -60,6 +60,7 @@ export {};
       main: config.language === "ts" ? "src/test.ts" : "test.js",
       scripts: {
         test: `k6 run generated/${config.language === "ts" ? "test.generated.ts" : "test.generated.js"}`,
+        testBrowserHeaded: `K6_BROWSER_HEADLESS=false K6_BROWSER_ENABLED=true k6 run generated/${config.language === "ts" ? "test.generated.ts" : "test.generated.js"}`,
         dev: `k6 run --out json=results.json generated/${config.language === "ts" ? "test.generated.ts" : "test.generated.js"}`,
       },
       devDependencies: {

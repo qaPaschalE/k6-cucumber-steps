@@ -52,24 +52,30 @@ You can now combine **Protocol-level (HTTP)** load testing and **Browser-level (
 
 ## 🚀 Quick Start (Scaffolding a New Project)
 
-The easiest way to start is by initializing a pre-configured project structure.
+### 🧪 Usage Examples
 
+#### Initialize in current directory:
 ```bash
-# 1. Create your test directory
-mkdir my-load-tests && cd my-load-tests
+npx k6-cucumber-steps init
+# or
+npx k6-cucumber-steps init .
+```
 
-# 2. Initialize the project (defaults to TypeScript)
+→ Creates `features/`, `steps/`, `generated/`, etc. **in your current folder**
+
+#### Initialize in a new subdirectory:
+```bash
+# Initialize in current dir with TypeScript (default)
 npx k6-cucumber-steps init
 
-# OR Initialize with JavaScript
-npx k6-cucumber-steps init --lang js|ts
+# Initialize in current dir with JavaScript
+npx k6-cucumber-steps init -l js
 
-# 3. Install dependencies & Run
-npm install
-npx k6-cucumber-steps generate -l js|ts
-npm test
-
+# Initialize in subdirectory with JS
+npx k6-cucumber-steps init my-project -l js
 ```
+
+→ Creates `my-project/` with full structure
 
 ---
 
