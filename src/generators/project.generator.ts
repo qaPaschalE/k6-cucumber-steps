@@ -53,29 +53,61 @@ export {};
     fs.writeFileSync(path.join(outputPath, "global.types.d.ts"), content);
   }
   private generatePackageJson(outputPath: string, config: ProjectConfig): void {
-    const packageJson = {
-      name: "k6-cucumber-test-project",
-      version: "1.0.0",
-      description: "Generated k6 test project with Cucumber integration",
-      main: config.language === "ts" ? "src/test.ts" : "test.js",
-      scripts: {
-        test: `k6 run generated/${config.language === "ts" ? "test.generated.ts" : "test.generated.js"}`,
-        testBrowserHeaded: `K6_BROWSER_HEADLESS=false K6_BROWSER_ENABLED=true k6 run generated/${config.language === "ts" ? "test.generated.ts" : "test.generated.js"}`,
-        dev: `k6 run --out json=results.json generated/${config.language === "ts" ? "test.generated.ts" : "test.generated.js"}`,
-      },
-      devDependencies: {
-        "@types/k6": "^0.48.0",
-      },
-      dependencies: {
-        // Add any runtime dependencies here
-      },
-      author: config.author,
-      license: "MIT",
+    const pkgPath = path.join(outputPath, "package.json");
+    let pkg: any = {};
+
+    // Load existing package.json if it exists
+    if (fs.existsSync(pkgPath)) {
+      try {
+        pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+        console.log("📦 Detected existing package.json — merging...");
+      } catch (e) {
+        console.warn("⚠️ Invalid package.json. Creating new one.");
+        pkg = {};
+      }
+    }
+
+    // Ensure scripts object exists
+    pkg.scripts = pkg.scripts || {};
+
+    // Add/merge our scripts (do NOT replace entire scripts object)
+    const lang = config.language === "ts" ? "ts" : "js";
+    const newScripts = {
+      "test": `k6 run generated/test.generated.${lang}`,
+      "test:ui": `K6_BROWSER_ENABLED=true k6 run generated/test.generated.${lang}`,
+      "test:api": `K6_BROWSER_ENABLED=false k6 run generated/test.generated.${lang}`,
+      "generate": `k6-cucumber-steps generate -l ${lang}`,
+      "generate:ui": `k6-cucumber-steps generate -l ${lang} --tags browser`,
+      "generate:api": `k6-cucumber-steps generate -l ${lang} --exclude-tags browser`,
     };
 
+    // Merge: only add/overwrite our scripts, keep others
+    Object.assign(pkg.scripts, newScripts);
+
+    // Ensure dependencies objects exist
+    pkg.devDependencies = pkg.devDependencies || {};
+    pkg.dependencies = pkg.dependencies || {};
+
+    // Add TypeScript if needed
+    if (config.language === "ts" && !pkg.devDependencies["typescript"]) {
+      pkg.devDependencies["typescript"] = "^5.0.0";
+    }
+
+    // Update @types/k6 to latest stable
+    pkg.devDependencies["@types/k6"] = "^1.5.0";
+
+    // Set top-level fields (only if not already set)
+    pkg.name = pkg.name || "k6-cucumber-test-project";
+    pkg.version = pkg.version || "1.0.0";
+    pkg.description = pkg.description || "Generated k6 test project with Cucumber integration";
+    pkg.main = pkg.main || (config.language === "ts" ? "src/test.ts" : "test.js");
+    pkg.author = pkg.author || config.author;
+    pkg.license = pkg.license || "MIT";
+
+    // Write back
     fs.writeFileSync(
-      path.join(outputPath, "package.json"),
-      JSON.stringify(packageJson, null, 2),
+      pkgPath,
+      JSON.stringify(pkg, null, 2) + "\n"
     );
   }
 
@@ -92,20 +124,43 @@ npm install
 
 ## Running Tests
 
-### Generate k6 script from features:
+### Generate k6 scripts from features:
 \`\`\`bash
-npx k6-cucumber-steps generate -l ${config.language === "ts" ? "ts" : "js"}
+# Generate all tests
+npm run generate
+
+# Generate only UI/browser tests (tagged @browser)
+npm run generate:ui
+
+# Generate only API tests (non-browser)
+npm run generate:api
 \`\`\`
 
 ### Run tests:
 \`\`\`bash
+# Run all tests
 npm test
+
+# Run only UI/browser tests
+npm run test:ui
+
+# Run only API tests
+npm run test:api
 \`\`\`
 
 ## Project Structure
-- \`Features/\` - Gherkin feature files
-      - \`steps/\` - Step definition implementations
+- \`features/\` - Gherkin feature files
+  - \`sample.feature\` - API testing examples
+  - \`authSample.feature\` - Authentication workflows
+  - \`browserSample.feature\` - Browser automation examples
+- \`steps/\` - Step definition implementations
 - \`generated/\` - Generated k6 scripts
+- \`data/\` - Runtime token storage (auto-generated)
+- \`reports/\` - HTML and JSON test reports
+
+## Safe Initialization
+This project was initialized with \`k6-cucumber-steps init\`.  
+Existing project files and dependencies were preserved.
 `;
 
     fs.writeFileSync(path.join(outputPath, "README.md"), readmeContent);
