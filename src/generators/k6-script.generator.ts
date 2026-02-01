@@ -17,7 +17,7 @@ globalThis.lastResponse = globalThis.lastResponse || {};
 
     const imports = this.generateImports(config, metadata);
     const options = this.generateOptions(metadata);
-    const testFunction = this.generateTestFunction(scenarios, metadata);
+    const testFunction = this.generateTestFunction(scenarios, metadata, config);
 
     // ✅ Resolve teardown based on config.language NOW (in Node.js)
     const teardownFn = config.language === "ts"
@@ -107,25 +107,31 @@ ${handleSummaryFn}
 `;
 
   }
-  private generateImports(
-    config: ProjectConfig,
-    metadata: ScenarioMetadata[],
-  ): string {
+  private generateImports(config: ProjectConfig, meta: ScenarioMetadata[]): string {
     const ext = config.language === "ts" ? "ts" : "js";
-    const hasBrowser = metadata.some((m) => m.tags?.includes("browser"));
+    const hasBrowser = meta.some(m => m.tags?.includes("browser")); // ← now used!
 
     const baseImports = [
       'import http from "k6/http";',
       'import { check, sleep, group } from "k6";',
-      'import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";',
-      'import { textSummary } from "https://jslib.k6.io/k6-summary/0.1.0/index.js";',
     ];
+
+    // Add @ts-ignore for remote modules in TS mode
+    if (config.language === "ts") {
+      baseImports.push('// @ts-ignore: k6 resolves remote modules at runtime');
+      baseImports.push('import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";');
+      baseImports.push('// @ts-ignore: k6 resolves remote modules at runtime');
+      baseImports.push('import { textSummary } from "https://jslib.k6.io/k6-summary/0.1.0/index.js";');
+    } else {
+      baseImports.push('import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";');
+      baseImports.push('import { textSummary } from "https://jslib.k6.io/k6-summary/0.1.0/index.js";');
+    }
 
     if (hasBrowser) {
       baseImports.push('import { browser } from "k6/browser";');
     }
 
-    baseImports.push(`import * as steps from "../steps/sample.steps.${ext}"; `);
+    baseImports.push(`import * as steps from "../steps/sample.steps.${ext}";`);
 
     return baseImports.join("\n");
   }
@@ -248,23 +254,18 @@ ${handleSummaryFn}
   }
 
   private normalizeStepText(text: string): string {
-    // 1. Remove quotes and their contents
-    const noQuotes = text.replace(/"[^"]*"|'[^']*'/g, "").trim();
+    // Remove quoted strings first
+    const noQuotes = text.replace(/"[^"]*"|'[^']*'/g, "");
+    // Normalize "with headers" -> treat as separate keyword
+    let clean = noQuotes
+      .replace(/\s+with\s+headers\s*$/, "") // remove trailing "with headers"
+      .replace(/[^a-zA-Z0-9\s]/g, " ")
+      .trim();
 
-    // 2. Remove non-alphanumeric characters (except spaces)
-    const cleanChars = noQuotes.replace(/[^a-zA-Z0-9\s]/g, "");
-
-    // 3. Split by whitespace and camelCase
-    // Using a simpler split regex to avoid double-backslash issues in TS templates
-    return cleanChars
-      .split(/\s+/)
-      .filter((word) => word.length > 0)
-      .map((word, i) =>
-        i === 0
-          ? word.toLowerCase()
-          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-      )
-      .join("");
+    const words = clean.split(/\s+/).filter(w => w);
+    return words.map((w, i) =>
+      i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+    ).join("");
   }
 
   private extractArguments(text: string): string {
@@ -276,7 +277,7 @@ ${handleSummaryFn}
 
   // Inside K6ScriptGenerator.ts
 
-  private generateTestFunction(scenarios: Scenario[], metadata: ScenarioMetadata[]): string {
+  private generateTestFunction(scenarios: Scenario[], metadata: ScenarioMetadata[], config: ProjectConfig): string {
     const hasAnyBrowser = metadata.some((m) => m.tags?.includes("browser"));
     const lines: string[] = [];
 
@@ -310,7 +311,7 @@ ${handleSummaryFn}
 
           const needsPage = [
             "navigate", "click", "see", "fill", "type", "press", "waitfor", "wait", "locator",
-            "select", "title", "url", "element", "shouldsee", "shouldnotsee"
+            "select", "title", "url", "element", "shouldsee", "shouldnotsee", "button", "find"
           ].some(kw => name.toLowerCase().includes(kw)) &&
             !["thebaseurlis", "thebaseurl"].some(kw => name.toLowerCase().includes(kw));
 
@@ -327,9 +328,13 @@ ${handleSummaryFn}
           lines.push(`    ${callPrefix}steps.${name}(${params.join(", ")});`);
         });
         lines.push(`  } catch (err) {`);
-        lines.push(`    console.error('Error in ${scenario.name}:', err);`);
-        lines.push(`    console.error('Stack:', err && err.stack ? err.stack : 'No stack');`);
-        lines.push(`  }`);
+        const stackAccessCode = config.language === "ts"
+          ? "(err as any)?.stack || 'No stack'"
+          : "err?.stack || 'No stack'";
+
+        lines.push(`      console.error('Error in ${scenario.name}:', err);`);
+        lines.push(`      console.error('Stack:', ${stackAccessCode});`);
+        lines.push(`    }`);
       } else {
         // Non-browser (HTTP/API) steps
         scenario.steps.forEach((step) => {
