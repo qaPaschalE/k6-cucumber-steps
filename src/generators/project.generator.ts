@@ -87,9 +87,16 @@ declare global {
     const lang = config.language === "ts" ? "ts" : "js";
     const newScripts = {
       test: `k6 run generated/test.generated.${lang}`,
+      "test:env": "npx dotenv-cli -- k6 run generated/test.generated.ts",
       "test:ui": `K6_BROWSER_ENABLED=true k6 run generated/test.generated.${lang}`,
+      "test:ui:env":
+        "K6_BROWSER_ENABLED=true npx dotenv-cli -- k6 run generated/test.generated.ts",
       "test:ui:headed": `K6_BROWSER_HEADLESS=false K6_BROWSER_ENABLED=true k6 run generated/test.generated.${lang}`,
+      "test:ui:headed:env":
+        "K6_BROWSER_HEADLESS=false K6_BROWSER_ENABLED=true npx dotenv-cli -- k6 run generated/test.generated.ts",
       "test:api": `K6_BROWSER_ENABLED=false k6 run generated/test.generated.${lang}`,
+      "test:api:env":
+        "K6_BROWSER_ENABLED=false npx dotenv-cli -- k6 run generated/test.generated.ts",
       generate: `k6-cucumber-steps generate -l ${lang}`,
       "generate:ui": `k6-cucumber-steps generate -l ${lang} --tags browser`,
       "generate:api": `k6-cucumber-steps generate -l ${lang} --exclude-tags browser`,
@@ -112,7 +119,7 @@ declare global {
 
     // Update @types/k6 to latest stable
     pkg.devDependencies["@types/k6"] = "^1.6.0";
-
+    pkg.devDependencies["@types/node"] = "^20.19.34";
     // Set top-level fields (only if not already set)
     pkg.name = pkg.name || "k6-cucumber-test-project";
     pkg.version = pkg.version || "1.0.0";
@@ -136,25 +143,6 @@ Generated with k6-cucumber-steps by ${config.author}
 
 \`\`\`bash
 npm install
-\`\`\`
-
-## Environment Variables
-
-1. Copy the example environment file:
-\`\`\`bash
-cp .env.example .env
-\`\`\`
-
-2. Edit \`.env\` and fill in your values:
-\`\`\`bash
-API_BASE_URL=https://api.example.com
-TEST_USER_USERNAME=your_username
-TEST_USER_PASSWORD=your_password
-\`\`\`
-
-3. Run tests with environment variables:
-\`\`\`bash
-npx dotenv-cli -- k6 run generated/test.generated.ts
 \`\`\`
 
 ## Running Tests
@@ -226,7 +214,7 @@ coverage/
         esModuleInterop: true,
         skipLibCheck: true,
         forceConsistentCasingInFileNames: true,
-        types: ["k6"],
+        types: ["k6", "node"],
         allowImportingTsExtensions: true,
         noEmit: true,
       },
