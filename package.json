@@ -13,7 +13,8 @@
     "start": "node dist/cli.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublishOnly": "npm run build",
-    "docs:build": "echo 'Documentation available in steps/metadata.json and README.md'"
+    "docs": "typedoc",
+    "docs:serve": "npx http-server ./docs -p 8080 -o"
   },
   "repository": {
     "type": "git",

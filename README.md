@@ -20,20 +20,34 @@ Run [k6](https://k6.io/) performance/load tests using [Cucumber](https://cucumbe
 
 All step definitions are fully documented and available in multiple formats:
 
-### 1. Step Metadata (JSON)
+### 1. TypeDoc API Documentation
+Interactive HTML documentation with search and navigation:
+
+**Online:** [View TypeDoc Documentation](https://qapaschale.github.io/k6-cucumber-steps/docs/)
+
+**Locally:**
+```bash
+# Generate documentation
+npm run docs
+
+# View in browser
+npm run docs:serve
+```
+
+### 2. Step Metadata (JSON)
 When you initialize a project, a `steps/metadata.json` file is generated containing:
-- All 67 available step patterns
+- All available step patterns
 - Function names and parameters
 - Categories (HTTP, Browser, Assertions, etc.)
 - Descriptions for each step
 
-### 2. TypeScript Type Definitions
+### 3. TypeScript Type Definitions
 The `src/steps.d.ts` file provides:
 - Full TypeScript type definitions
 - JSDoc comments with examples
 - IntelliSense support in IDEs
 
-### 3. README Reference
+### 4. README Reference
 See the [Step Definitions Reference](#step-definitions-reference) section below for common usage examples.
 
 ---
@@ -343,6 +357,7 @@ Scenario: Login and Save Session
 
 ```
 
+<a name="step-definitions-reference"></a>
 ## 🧼 Step Definitions Reference
 
 | Step Example                          | Layer   | Description                  |

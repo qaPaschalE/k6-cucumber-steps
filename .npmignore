@@ -13,8 +13,11 @@ src/
 !dist/*.d.ts
 !dist/**/*.d.ts
 
-# Ignore source documentation
+# Ignore documentation source
 docs/
+typedoc.json
+
+# Ignore source documentation
 *.md
 !README.md
 !RELEASE_NOTES.md

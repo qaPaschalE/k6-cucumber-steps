@@ -15,6 +15,7 @@ reports/
 # Test data & artifacts
 # We usually ignore the generated test files if they are rebuilt every run
 generated/
+docs/
 
 # Sensitive Data
 # IMPORTANT: Ignore the token files created during the test
