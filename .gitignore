@@ -6,6 +6,7 @@ dist/
 # k6 generated reports
 reports/
 *.html
+!package-lock.json  # Don't ignore npm lock file
 *.json
 !tsconfig.json # Don't ignore the TypeScript config
 !package.json # Don't ignore the actual package config
