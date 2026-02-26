@@ -7,30 +7,61 @@ import { FeatureFile, Scenario, Step, ScenarioMetadata } from "../types";
 
 export class FeatureParser {
   async loadAndParseFeatures(featuresPath: string): Promise<FeatureFile[]> {
-    // Resolve path relative to the Current Working Directory
-    const resolvedPath = path.resolve(process.cwd(), featuresPath);
     const featureFiles: FeatureFile[] = [];
 
-    if (!fs.existsSync(resolvedPath)) {
-      throw new Error(
-        `The path "${featuresPath}" does not exist at ${resolvedPath}`,
-      );
-    }
-
-    if (fs.statSync(resolvedPath).isDirectory()) {
-      const files = fs.readdirSync(resolvedPath);
-      for (const file of files) {
-        if (file.endsWith(".feature")) {
-          const fullPath = path.join(resolvedPath, file);
-          const content = fs.readFileSync(fullPath, "utf8");
-          featureFiles.push(this.parseFeature(content, fullPath));
-        }
+    // Handle multiple paths (comma-separated)
+    const paths = featuresPath.split(',').map(p => p.trim()).filter(p => p);
+    
+    for (const singlePath of paths) {
+      const resolvedPath = path.resolve(process.cwd(), singlePath);
+      
+      if (!fs.existsSync(resolvedPath)) {
+        console.warn(`⚠️  Warning: The path "${singlePath}" does not exist at ${resolvedPath}`);
+        continue;
       }
-    } else {
-      const content = fs.readFileSync(resolvedPath, "utf8");
-      featureFiles.push(this.parseFeature(content, resolvedPath));
+
+      if (fs.statSync(resolvedPath).isDirectory()) {
+        // Recursively find all .feature files in directory
+        const dirFeatureFiles = this.findFeatureFilesRecursive(resolvedPath);
+        for (const file of dirFeatureFiles) {
+          const content = fs.readFileSync(file, "utf8");
+          featureFiles.push(this.parseFeature(content, file));
+        }
+      } else if (singlePath.endsWith(".feature")) {
+        // Single feature file
+        const content = fs.readFileSync(resolvedPath, "utf8");
+        featureFiles.push(this.parseFeature(content, resolvedPath));
+      } else {
+        console.warn(`⚠️  Warning: "${singlePath}" is not a directory or .feature file`);
+      }
     }
 
+    if (featureFiles.length === 0) {
+      throw new Error(`No feature files found in: ${featuresPath}`);
+    }
+
+    return featureFiles;
+  }
+
+  /**
+   * Recursively find all .feature files in a directory
+   */
+  private findFeatureFilesRecursive(dirPath: string): string[] {
+    const featureFiles: string[] = [];
+    
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+      
+      if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+        // Recursively search subdirectories (exclude hidden and node_modules)
+        featureFiles.push(...this.findFeatureFilesRecursive(fullPath));
+      } else if (entry.isFile() && entry.name.endsWith(".feature")) {
+        featureFiles.push(fullPath);
+      }
+    }
+    
     return featureFiles;
   }
 

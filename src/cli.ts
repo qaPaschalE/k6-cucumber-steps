@@ -53,32 +53,54 @@ interface GenerateOptions {
 
 async function generateK6Scripts(options: GenerateOptions) {
   console.log("Generating k6 scripts from feature files...");
+  console.log(`📂 Searching for feature files in: ${options.features || "./features"}`);
 
   const parser = new FeatureParser();
   const features = await parser.loadAndParseFeatures(options.features || "./features");
 
+  console.log(`✅ Found ${features.length} feature file(s)`);
+  
+  // Count total scenarios before filtering
+  const totalScenarios = features.reduce((sum, f) => sum + f.scenarios.length, 0);
+  console.log(`📋 Total scenarios found: ${totalScenarios}`);
+
   // Include by tags
   if (options.tags) {
     const includeTags = options.tags.split(",").map(t => t.trim()).filter(t => t);
+    console.log(`🏷️  Including scenarios with tags: ${includeTags.join(', ')}`);
+    
+    let beforeCount = totalScenarios;
     features.forEach((feature) => {
       feature.scenarios = feature.scenarios.filter((scenario: any) =>
         includeTags.some(tag => scenario.tags.includes(tag))
       );
     });
+    
+    const afterCount = features.reduce((sum, f) => sum + f.scenarios.length, 0);
+    console.log(`   Filtered: ${beforeCount} → ${afterCount} scenarios`);
   }
 
   // Exclude by tags
   if (options.excludeTags) {
     const excludeTags = options.excludeTags.split(",").map(t => t.trim()).filter(t => t);
+    console.log(`🚫 Excluding scenarios with tags: ${excludeTags.join(', ')}`);
+    
+    let beforeCount = features.reduce((sum, f) => sum + f.scenarios.length, 0);
     features.forEach((feature) => {
       feature.scenarios = feature.scenarios.filter((scenario: any) =>
         !excludeTags.some(tag => scenario.tags.includes(tag))
       );
     });
+    
+    const afterCount = features.reduce((sum, f) => sum + f.scenarios.length, 0);
+    console.log(`   Filtered: ${beforeCount} → ${afterCount} scenarios`);
   }
+  
   // Flatten all scenarios
   const allScenarios = features.flatMap((f) => f.scenarios);
   const metadata = parser.loadScenarioMetadata(allScenarios);
+
+  console.log(`📝 Processing ${allScenarios.length} scenario(s) for script generation...`);
 
   const generator = new K6ScriptGenerator();
   const config: ProjectConfig = {

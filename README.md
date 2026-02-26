@@ -25,6 +25,8 @@ Interactive HTML documentation with search and navigation:
 
 **Online:** [View TypeDoc Documentation](https://qapaschale.github.io/k6-cucumber-steps/docs/)
 
+> 🚀 **Auto-Deployed**: Documentation is automatically generated and deployed to GitHub Pages on every push to the `main` branch.
+
 **Locally:**
 ```bash
 # Generate documentation
@@ -158,6 +160,92 @@ And I k6 print all aliases            # Print all stored aliases
 
 ```gherkin
 Given I k6 clear auth token           # Remove Authorization header
+```
+
+## 🆕 What's New in v2.0.9
+
+### 🔍 Recursive Feature File Search
+
+The feature parser now **automatically searches subdirectories** for `.feature` files.
+
+**Example:**
+```bash
+npx k6-cucumber-steps generate -f ./features
+# Finds: ./features/login.feature
+#        ./features/api/users.feature
+#        ./features/api/orders.feature
+#        ./features/ui/dashboard.feature
+```
+
+**Excluded directories:** `node_modules/`, hidden directories (`.git/`, `.github/`, etc.)
+
+### 📁 Multiple Feature Paths
+
+Specify **multiple directories or files** using comma-separated paths.
+
+```bash
+# Search multiple directories
+npx k6-cucumber-steps generate -f "./features/api,./features/ui,./tests/regression"
+
+# Mix directories and single files
+npx k6-cucumber-steps generate -f "./features,./tests/smoke.feature"
+```
+
+### 🏷️ Enhanced Tag Filtering
+
+Better tag filtering with **detailed feedback** on what's being included/excluded.
+
+```bash
+# Include only @smoke tests
+npx k6-cucumber-steps generate --tags @smoke
+
+# Include multiple tags (OR logic)
+npx k6-cucumber-steps generate --tags "@smoke,@regression"
+
+# Exclude specific tags
+npx k6-cucumber-steps generate --exclude-tags "@wip,@broken"
+
+# Combine include and exclude
+npx k6-cucumber-steps generate --tags "@smoke" --exclude-tags "@known-issue"
+```
+
+**New CLI Output:**
+```
+🏷️  Including scenarios with tags: @smoke
+   Filtered: 23 → 8 scenarios
+
+🚫 Excluding scenarios with tags: @wip
+   Filtered: 8 → 6 scenarios
+```
+
+### 📄 Single Feature File Support
+
+Target **individual feature files** directly.
+
+```bash
+# Run single feature file
+npx k6-cucumber-steps generate -f ./features/login.feature
+
+# Generate specific test suite
+npx k6-cucumber-steps generate -f ./tests/regression/payment-flow.feature
+```
+
+### 📊 Improved CLI Feedback
+
+Enhanced command-line output with detailed progress information:
+
+```bash
+$ npx k6-cucumber-steps generate -f ./features --tags @smoke
+
+Generating k6 scripts from feature files...
+📂 Searching for feature files in: ./features
+✅ Found 5 feature file(s)
+📋 Total scenarios found: 23
+🏷️  Including scenarios with tags: @smoke
+   Filtered: 23 → 8 scenarios
+📝 Processing 8 scenario(s) for script generation...
+✅ Generated k6 script: ./generated/test.generated.ts
+📋 Scenarios processed: 8
 ```
 
 ## ✨ New: Hybrid Performance Testing

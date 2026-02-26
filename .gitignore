@@ -35,7 +35,7 @@ yarn-error.log*
 
 # Qwen context file
 QWEN.md
-RELEASE_NOTES.md
+RELEASE_NOTES*.md
 
 firebase-debug.log
 

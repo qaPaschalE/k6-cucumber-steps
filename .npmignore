@@ -20,7 +20,7 @@ typedoc.json
 # Ignore source documentation
 *.md
 !README.md
-!RELEASE_NOTES.md
+!RELEASE_NOTES*.md
 QWEN.md
 
 # Ignore example files that shouldn't be in package
