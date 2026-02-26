@@ -1,0 +1,15 @@
+{
+  "_comment": "k6-cucumber-steps Payload Template",
+  "_description": "This file supports both environment variables and aliases",
+  "_env_syntax": "{{VARIABLE_NAME}} - replaced from .env or K6_ prefixed env vars",
+  "_alias_syntax": "{{alias:NAME}} - replaced with stored alias values",
+  
+  "title": "{{POST_TITLE}}",
+  "body": "Testing with {{VARIABLE_NAME}} and {{alias:authToken}}",
+  "userId": 1,
+  "metadata": {
+    "token": "{{alias:authToken}}",
+    "apiKey": "{{API_KEY}}",
+    "timestamp": "{{CURRENT_TIMESTAMP}}"
+  }
+}

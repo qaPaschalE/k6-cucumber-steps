@@ -1,6 +1,6 @@
 {
   "name": "k6-cucumber-steps",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Generate k6 test scripts from Cucumber feature files",
   "main": "dist/cli.js",
   "bin": {
@@ -8,10 +8,12 @@
   },
   "scripts": {
     "build": "tsc",
+    "postbuild": "node scripts/generate-metadata.js",
     "dev": "tsc --watch",
     "start": "node dist/cli.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "docs:build": "echo 'Documentation available in steps/metadata.json and README.md'"
   },
   "repository": {
     "type": "git",
@@ -51,13 +53,14 @@
     "@types/k6": "^1.5.0",
     "@types/node": "^25.0.10",
     "fs-extra": "^11.3.3",
-    "typedoc": "^0.25.4",
-    "typedoc-plugin-markdown": "^4.0.0"
+    "typedoc": "^0.28.17",
+    "typedoc-plugin-markdown": "^4.10.0"
   },
   "files": [
     "dist/**/*",
     "templates/**/*",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "payload.json.example"
   ]
 }

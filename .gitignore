@@ -1,6 +1,7 @@
 # Dependency directories
 node_modules/
 dist/
+!dist/metadata.json # Include generated metadata in dist
 
 # k6 generated reports
 reports/
@@ -8,6 +9,8 @@ reports/
 *.json
 !tsconfig.json # Don't ignore the TypeScript config
 !package.json # Don't ignore the actual package config
+!dist/metadata.json # Don't ignore generated metadata
+!payload.json.example # Don't ignore payload example template
 
 # Test data & artifacts
 # We usually ignore the generated test files if they are rebuilt every run
@@ -28,3 +31,12 @@ yarn-error.log*
 .vscode/
 .idea/
 .DS_Store
+
+# Qwen context file
+QWEN.md
+RELEASE_NOTES.md
+
+firebase-debug.log
+
+# npm pack artifacts
+*.tgz

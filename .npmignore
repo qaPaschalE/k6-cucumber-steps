@@ -6,8 +6,20 @@
 reports/
 generated/
 data/
+
+# Ignore source files (we ship dist/)
 src/
+# But include type definitions from dist
+!dist/*.d.ts
+!dist/**/*.d.ts
+
 # Ignore source documentation
 docs/
 *.md
 !README.md
+!RELEASE_NOTES.md
+QWEN.md
+
+# Ignore example files that shouldn't be in package
+# But include payload example as it's useful for users
+!payload.json.example

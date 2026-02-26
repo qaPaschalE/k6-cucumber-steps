@@ -3,6 +3,9 @@ import { InitCommand } from "./commands/init.command";
 import { FeatureParser } from "./generators/feature.parser";
 import { K6ScriptGenerator } from "./generators/k6-script.generator";
 import { ProjectGenerator } from "./generators/project.generator";
+import { SampleFeaturesGenerator } from "./generators/samples/sample-features.generator";
+import { SampleStepsGenerator } from "./generators/samples/sample-steps.generator";
+import { StepsMetadataGenerator } from "./generators/samples/steps-metadata.generator";
 import { K6Runner } from "./runners/k6.runner";
 import { Given, When, Then, And, But } from "./step-registry";
 
@@ -11,6 +14,9 @@ export {
   FeatureParser,
   K6ScriptGenerator,
   ProjectGenerator,
+  SampleFeaturesGenerator,
+  SampleStepsGenerator,
+  StepsMetadataGenerator,
   K6Runner,
   Given,
   When,

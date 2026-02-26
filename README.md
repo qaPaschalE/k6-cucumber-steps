@@ -16,17 +16,43 @@ Run [k6](https://k6.io/) performance/load tests using [Cucumber](https://cucumbe
 
 ---
 
+## 📚 Step Definitions Documentation
+
+All step definitions are fully documented and available in multiple formats:
+
+### 1. Step Metadata (JSON)
+When you initialize a project, a `steps/metadata.json` file is generated containing:
+- All 67 available step patterns
+- Function names and parameters
+- Categories (HTTP, Browser, Assertions, etc.)
+- Descriptions for each step
+
+### 2. TypeScript Type Definitions
+The `src/steps.d.ts` file provides:
+- Full TypeScript type definitions
+- JSDoc comments with examples
+- IntelliSense support in IDEs
+
+### 3. README Reference
+See the [Step Definitions Reference](#step-definitions-reference) section below for common usage examples.
+
+---
+
 ## ✨ Features
 
 - ✅ Cucumber + Gherkin for writing k6 tests
   to generate JSON and HTML reports.
 - ✅ Flexible configuration through Cucumber data tables.
 - ✅ Support for JSON body parsing and escaping
-- ✅ Dynamic request body generation using environment variables, Faker templates, and JSON file includes.
+- ✅ **Environment Variable Support**: Dynamic request body generation using `{{VARIABLE_NAME}}` placeholders
+- ✅ **Enhanced Auth Storage**: Store tokens with aliases for cross-scenario reuse
 - ✅ `.env` + `K6.env`-style variable resolution (`{{API_KEY}}`)
 - ✅ Support for headers, query params, stages
 - ✅ Supports multiple authentication types: API key, Bearer token, Basic Auth, and No Auth.
-
+- ✅ **Extended HTTP Methods**: GET, POST, PUT, PATCH with body support
+- ✅ **Response Time Assertions**: Validate API performance with millisecond/second thresholds
+- ✅ **Property Validation**: Deep nested property checks, boolean assertions, empty checks
+- ✅ **Alias System**: Store and compare response values across scenarios
 - ✅ Clean-up of temporary k6 files after execution
 - ✅ Built-in support for **distributed load testing** with stages
 - ✅ TypeScript-first 🧡
@@ -38,6 +64,87 @@ Run [k6](https://k6.io/) performance/load tests using [Cucumber](https://cucumbe
 - 🔑 **Dynamic Auth Storage**: Store tokens from one scenario and reuse them in another via `globalThis` memory.
 - 🛠 **JS & TS Support**: Generate your project in pure JavaScript or TypeScript.
 - 📊 **Metric Segmentation**: Scenarios are wrapped in k6 `group()` blocks for cleaner reporting.
+
+## 🆕 What's New in v2.0.8
+
+### ⚠️ Breaking Change: Step Definition Prefix
+
+All step definitions now use the **`k6` prefix** to avoid conflicts with other step libraries and make it clear these are k6-specific steps.
+
+**Before:**
+```gherkin
+Given the base URL is "{{API_BASE_URL}}"
+When I make a GET request to "/users/1"
+```
+
+**After:**
+```gherkin
+Given the k6 base URL is "{{API_BASE_URL}}"
+When I k6 make a GET request to "/users/1"
+```
+
+### 🌍 Environment Variable Support
+
+Replace placeholders in your tests using `{{VARIABLE_NAME}}` syntax. Values are resolved from:
+- `__ENV` (k6 environment variables)
+- `K6_*` prefixed variables
+- Global context variables
+
+```gherkin
+Background:
+  Given the k6 base URL is "{{API_BASE_URL}}"
+
+Scenario: Login with environment credentials
+  When I k6 authenticate with the following url and request body as "user":
+    | endpoint | userName            | password            |
+    | /login   | {{TEST_USER_USERNAME}} | {{TEST_USER_PASSWORD}} |
+```
+
+### 🔐 Enhanced Alias System
+
+Store response data with custom aliases and reuse across scenarios:
+
+```gherkin
+Scenario: Store and reuse values
+  When I k6 make a POST request to "/login"
+  And I k6 store response "data.accessToken" as "authToken"
+  Then the k6 alias "authToken" should not be empty
+
+Scenario: Compare against stored values
+  Then the k6 response property "userName" should be alias "expectedUsername"
+  And the k6 response property "message" should contain alias "expectedMessage"
+```
+
+### 📝 New Assertion Steps
+
+| Step | Description | Example |
+|------|-------------|---------|
+| `theResponsePropertyShouldNotBeEmpty` | Validate property has a value | `Then the k6 response property "data.token" should not be empty` |
+| `theResponsePropertyShouldBeTrue/False` | Boolean assertions | `Then the k6 response property "success" should be true` |
+| `theResponsePropertyShouldHaveProperty` | Check nested properties | `Then the k6 response property "data" should have property "user"` |
+| `theResponseTimeShouldBeLessThan...` | Performance assertions | `Then the k6 response time should be less than "500" milliseconds` |
+| `theAliasShouldNotBeEmpty` | Validate stored aliases | `Then the k6 alias "authToken" should not be empty` |
+| `theAliasShouldBeEqualTo` | Compare alias to value | `Then the k6 alias "username" should be equal to "test_user"` |
+
+### 🌐 Extended HTTP Support
+
+- **PUT requests**: `When I k6 make a PUT request to "/users/1"`
+- **PUT with body**: `When I k6 make a PUT request to "/users/1" with body:`
+- **PATCH requests**: `When I k6 make a PATCH request to "/api/settings"`
+- **PATCH with body**: `When I k6 make a PATCH request to "/api/settings" with body:`
+
+### 🖨️ Debug Helpers
+
+```gherkin
+And I k6 print alias "authToken"      # Print a specific alias
+And I k6 print all aliases            # Print all stored aliases
+```
+
+### 🧹 Utility Steps
+
+```gherkin
+Given I k6 clear auth token           # Remove Authorization header
+```
 
 ## ✨ New: Hybrid Performance Testing
 
@@ -137,6 +244,54 @@ For projects where you prefer to run single features directly.
 
 ---
 
+## 🔐 Environment Variables Support
+
+The generated project includes `dotenv-cli` for easy environment variable management.
+
+### Using .env file
+
+1. Create a `.env` file in your project root:
+```bash
+API_BASE_URL=https://api.example.com
+AUTH_BASE_URL=https://auth.example.com
+TEST_USER_USERNAME=myuser
+TEST_USER_PASSWORD=mypassword
+POST_TITLE=My Test Post
+CLIENT_ID=my-client-id
+CLIENT_SECRET=my-secret
+```
+
+2. Run tests with environment variables:
+```bash
+# Using dotenv-cli to load .env file
+npx dotenv-cli -- k6 run generated/test.generated.ts
+
+# Or add to your package.json scripts:
+"test:env": "dotenv-cli -- k6 run generated/test.generated.ts"
+```
+
+### Using K6_ prefixed variables
+
+You can also use `K6_` prefixed environment variables directly:
+```bash
+K6_API_BASE_URL=https://api.example.com k6 run generated/test.generated.ts
+```
+
+### In your feature files
+
+Use `{{VARIABLE_NAME}}` syntax to reference environment variables:
+```gherkin
+Background:
+  Given the k6 base URL is "{{API_BASE_URL}}"
+
+Scenario: Login with environment credentials
+  When I k6 authenticate with the following url and request body as "user":
+    | endpoint | userName            | password            |
+    | /login   | {{TEST_USER_USERNAME}} | {{TEST_USER_PASSWORD}} |
+```
+
+---
+
 ## 🔑 Advanced Authentication Flow
 
 We now support **Dynamic Handshake Authentication**. You can log in once in an initial scenario, store the token, and all subsequent scenarios will automatically be authenticated.
@@ -192,10 +347,18 @@ Scenario: Login and Save Session
 
 | Step Example                          | Layer   | Description                  |
 | ------------------------------------- | ------- | ---------------------------- |
-| `When I make a GET request to "/api"` | API     | Standard HTTP request.       |
-| `When I navigate to the "/home" page` | Browser | Opens URL in Chromium.       |
-| `And I click the button ".submit"`    | Browser | Interacts with DOM elements. |
-| `And I store "path" in "file.json"`   | Both    | Dynamic data persistence.    |
+| `When I k6 make a GET request to "/api"` | API     | Standard HTTP request.       |
+| `When I k6 make a POST request to "/api"` | API    | Create resource with stored body |
+| `When I k6 make a PUT request to "/api"` | API     | Update resource with stored body |
+| `When I k6 make a PATCH request to "/api"` | API   | Partial update with stored body |
+| `When I k6 navigate to the "/home" page` | Browser | Opens URL in Chromium.       |
+| `And I k6 click the button ".submit"`    | Browser | Interacts with DOM elements. |
+| `And I k6 store "path" in "file.json"`   | Both    | Dynamic data persistence.    |
+| `And I k6 store response "data.token" as "authToken"` | API | Store response with alias |
+| `Then the k6 response property "id" should be "123"` | API | Validate property value |
+| `Then the k6 response property "success" should be true` | API | Boolean assertion |
+| `Then the k6 response time should be less than "500" milliseconds` | API | Performance check |
+| `Then the k6 alias "authToken" should not be empty` | API | Validate stored alias |
 
 ---
 
@@ -216,13 +379,126 @@ Every test run now produces a rich HTML dashboard. Your scenarios are grouped na
 ### Authentication Steps
 
 ```gherkin
-When I authenticate with the following url and request body as "standard_user":
+When I k6 authenticate with the following url and request body as "standard_user":
 | endpoint | username      | password    |
     | /login   | paschal_qa    | pass123     |
-And I am authenticated as a "standard_user" # Lookups token from memory
+And I k6 am authenticated as a "standard_user" # Lookups token from memory
 ```
 
-### sample features
+### Environment Variable Steps
+
+```gherkin
+Background:
+  Given the k6 base URL is "{{API_BASE_URL}}"  # Resolves from __ENV or .env
+
+Scenario: Use environment variables in request body
+  Given I k6 have the following post data:
+    """
+    {
+      "username": "{{TEST_USER_USERNAME}}",
+      "password": "{{TEST_USER_PASSWORD}}"
+    }
+    """
+```
+
+### Payload JSON File Steps
+
+Load request body from a JSON file with support for both environment variables and aliases.
+
+```gherkin
+Scenario: Use payload.json file with env vars and aliases
+  # First, store a token as an alias
+  When I k6 authenticate with the following url and request body as "user":
+    | endpoint | username | password |
+    | /login   | testuser | pass123  |
+  And I k6 store response "accessToken" as "authToken"
+  
+  # Load payload from file (supports {{VARIABLE_NAME}} and {{alias:NAME}})
+  Given I k6 use payload json from file "payload.json"
+  When I k6 make a POST request to "/api/users"
+  
+  # Or combine loading and request in one step
+  When I k6 make a POST request to "/api/users" with payload from "data/create-user.json"
+```
+
+**File Resolution Order:**
+1. `data/{fileName}` if exists
+2. `{fileName}` in project root if exists  
+3. `payload.json` in project root as fallback
+
+**Template Syntax:**
+- `{{VARIABLE_NAME}}` - Replaced with environment variable value
+- `{{alias:NAME}}` - Replaced with stored alias value
+
+**Example payload.json:**
+```json
+{
+  "title": "{{POST_TITLE}}",
+  "author": "{{alias:username}}",
+  "token": "{{alias:authToken}}",
+  "body": "Content with {{VARIABLE_NAME}} support"
+}
+```
+
+### Alias & Storage Steps
+
+```gherkin
+Scenario: Store and reuse values
+  When I k6 make a POST request to "/login"
+  And I k6 store response "data.accessToken" as "authToken"
+  Then the k6 alias "authToken" should not be empty
+
+  # Compare response against stored alias
+  Then the k6 response property "userName" should be alias "expectedUsername"
+
+  # Debug: print stored values
+  And I k6 print alias "authToken"
+  And I k6 print all aliases
+```
+
+### Response Assertion Steps
+
+```gherkin
+# Property validation
+Then the k6 response property "data.id" should be "123"
+Then the k6 response property "data.token" should not be empty
+Then the k6 response property "success" should be true
+Then the k6 response property "deleted" should be false
+Then the k6 response property "user" should have property "email"
+Then the k6 response property "message" should contain "success"
+
+# Performance assertions
+Then the k6 response time should be less than "500" milliseconds
+Then the k6 response time should be less than "2" seconds
+
+# Alias comparisons
+Then the k6 alias "authToken" should not be empty
+Then the k6 alias "username" should be equal to "test_user"
+Then the k6 response property "token" should be alias "expectedToken"
+```
+
+### HTTP Request Steps
+
+```gherkin
+# GET requests
+When I k6 make a GET request to "/users/1"
+When I k6 make a GET request to "/users/1" with headers:
+  | Authorization | Content-Type     |
+  | Bearer abc123 | application/json |
+
+# POST requests
+When I k6 make a POST request to "/users"
+
+# PUT requests
+When I k6 make a PUT request to "/users/1"
+When I k6 make a PUT request to "/users/1" with body:
+
+# PATCH requests
+When I k6 make a PATCH request to "/settings"
+When I k6 make a PATCH request to "/settings" with body:
+```
+
+### Sample Features
 
 ```gherkin
 @smoke @vus:10 @duration:1m

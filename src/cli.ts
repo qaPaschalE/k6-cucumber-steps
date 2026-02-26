@@ -34,28 +34,48 @@ program
     "Output path for generated scripts",
     "./generated",
   )
+  .option("--exclude-tags <tags>", "Exclude scenarios by tags (comma-separated)")
   .option("-l, --lang <language>", "Output language (js or ts)", "ts")
   .option("--tags <tags>", "Filter scenarios by tags")
   .action(async (options) => {
     await generateK6Scripts(options);
   });
 
-async function generateK6Scripts(options: any) {
+
+// Define options interface (at top of file)
+interface GenerateOptions {
+  features?: string;
+  output?: string;
+  lang?: "js" | "ts";
+  tags?: string;
+  excludeTags?: string;
+}
+
+async function generateK6Scripts(options: GenerateOptions) {
   console.log("Generating k6 scripts from feature files...");
 
   const parser = new FeatureParser();
-  const features = await parser.loadAndParseFeatures(options.features);
+  const features = await parser.loadAndParseFeatures(options.features || "./features");
 
-  // Filter by tags if provided
+  // Include by tags
   if (options.tags) {
-    const tagFilters = options.tags.split(",");
+    const includeTags = options.tags.split(",").map(t => t.trim()).filter(t => t);
     features.forEach((feature) => {
       feature.scenarios = feature.scenarios.filter((scenario: any) =>
-        tagFilters.some((filter: any) => scenario.tags.includes(filter)),
+        includeTags.some(tag => scenario.tags.includes(tag))
       );
     });
   }
 
+  // Exclude by tags
+  if (options.excludeTags) {
+    const excludeTags = options.excludeTags.split(",").map(t => t.trim()).filter(t => t);
+    features.forEach((feature) => {
+      feature.scenarios = feature.scenarios.filter((scenario: any) =>
+        !excludeTags.some(tag => scenario.tags.includes(tag))
+      );
+    });
+  }
   // Flatten all scenarios
   const allScenarios = features.flatMap((f) => f.scenarios);
   const metadata = parser.loadScenarioMetadata(allScenarios);
@@ -63,8 +83,8 @@ async function generateK6Scripts(options: any) {
   const generator = new K6ScriptGenerator();
   const config: ProjectConfig = {
     language: options.lang as "js" | "ts",
-    featuresDir: options.features,
-    outputDir: options.output,
+    featuresDir: options.features || "./features",
+    outputDir: options.output || "./generated",
     includeHtmlReporter: true,
     author: "Enyimiri Chetachi Paschal (qaPaschalE)",
     version: packageJson.version,
@@ -72,9 +92,11 @@ async function generateK6Scripts(options: any) {
 
   const k6Script = generator.generateK6File(allScenarios, metadata, config);
 
+  const outputDir = options.output || "./generated";
+
   // Ensure output directory exists
-  if (!fs.existsSync(options.output)) {
-    fs.mkdirSync(options.output, { recursive: true });
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
   }
 
   const outputFile = `${options.output}/test.generated.${options.lang}`;

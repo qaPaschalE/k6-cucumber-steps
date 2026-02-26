@@ -1,6 +1,5 @@
 // src/generators/k6-script.generator.ts
 import { Scenario, ScenarioMetadata, ProjectConfig } from "../types";
-
 export class K6ScriptGenerator {
   generateK6File(
     scenarios: Scenario[],
@@ -19,18 +18,16 @@ globalThis.lastResponse = globalThis.lastResponse || {};
     const options = this.generateOptions(metadata);
     const testFunction = this.generateTestFunction(scenarios, metadata, config);
 
-    // ✅ Resolve teardown based on config.language NOW (in Node.js)
+    // ✅ Simplified teardown: just return the tokens (no globalThis needed)
     const teardownFn = config.language === "ts"
       ? `export function teardown(tokensFromDefault: Record<string, any>) {
-  // Capture return value from default function
-  globalThis.exportedTokens = tokensFromDefault;
+  return tokensFromDefault;
 }`
       : `export function teardown(tokensFromDefault) {
-  // Capture return value from default function
-  globalThis.exportedTokens = tokensFromDefault;
+  return tokensFromDefault;
 }`;
 
-    // ✅ Resolve handleSummary based on config.language NOW
+    // ✅ handleSummary already uses data.teardown_data — no change needed
     const handleSummaryFn = config.language === "ts"
       ? `export function handleSummary(data: any): Record<string, any> {
   const reports: Record<string, any> = {
@@ -41,18 +38,18 @@ globalThis.lastResponse = globalThis.lastResponse || {};
 
   console.log('--- Summary File Write Audit ---');
   
-  let tokens = data.teardown_data || globalThis.exportedTokens || globalThis.savedTokens || {};
-  if (data.setup_data && !Object.keys(tokens).length) {
-    tokens = data.setup_data;
-  }
-
+  const tokens = data.teardown_data || {};
   const keys = Object.keys(tokens).filter(k => k.endsWith('.json'));
   console.log('Tokens found:', keys.length > 0 ? keys.join(', ') : 'None');
 
   for (const [path, tokenValue] of Object.entries(tokens)) {
     if (path.endsWith('.json')) {
       const fullPath = path.startsWith('./') ? path : \`./\${path}\`;
-      reports[fullPath] = JSON.stringify(typeof tokenValue === 'string' ? { access_token: tokenValue } : tokenValue, null, 2);
+      reports[fullPath] = JSON.stringify(
+        typeof tokenValue === 'string' ? { access_token: tokenValue } : tokenValue,
+        null,
+        2
+      );
       console.log(\`✅ Writing: \${fullPath}\`);
     }
   }
@@ -68,26 +65,25 @@ globalThis.lastResponse = globalThis.lastResponse || {};
 
   console.log('--- Summary File Write Audit ---');
   
-  let tokens = data.teardown_data || globalThis.exportedTokens || globalThis.savedTokens || {};
-  if (data.setup_data && !Object.keys(tokens).length) {
-    tokens = data.setup_data;
-  }
-
+  const tokens = data["root_group::teardown"] || {};
   const keys = Object.keys(tokens).filter(k => k.endsWith('.json'));
   console.log('Tokens found:', keys.length > 0 ? keys.join(', ') : 'None');
 
   for (const [path, tokenValue] of Object.entries(tokens)) {
     if (path.endsWith('.json')) {
-      const fullPath = path.startsWith('./') ? path : \`./\${path}\`;
-      reports[fullPath] = JSON.stringify(typeof tokenValue === 'string' ? { access_token: tokenValue } : tokenValue, null, 2);
-      console.log(\`✅ Writing: \${fullPath}\`);
+      // ✅ Use path directly — no ./ prefix
+      reports[path] = JSON.stringify(
+        typeof tokenValue === 'string' ? { access_token: tokenValue } : tokenValue,
+        null,
+        2
+      );
+      console.log(\`✅ Writing: \${path}\`);
     }
   }
 
   return reports;
 }`;
 
-    // ✅ Now embed the resolved strings into the final output
     return `
 ${header}
 ${imports}
@@ -95,7 +91,6 @@ ${imports}
 ${options}
 
 export function setup() {
-  // We must return an object here to initialize the "data" channel
   return { v: Date.now() };
 }
 
@@ -105,8 +100,8 @@ ${teardownFn}
 
 ${handleSummaryFn}
 `;
-
   }
+
   private generateImports(config: ProjectConfig, meta: ScenarioMetadata[]): string {
     const ext = config.language === "ts" ? "ts" : "js";
     const hasBrowser = meta.some(m => m.tags?.includes("browser")); // ← now used!
@@ -263,6 +258,16 @@ ${handleSummaryFn}
       .trim();
 
     const words = clean.split(/\s+/).filter(w => w);
+    
+    // Check if the step starts with "k6" or contains "k6" as a keyword
+    // If text contains "k6", move it to the front
+    const k6Index = words.findIndex(w => w.toLowerCase() === 'k6');
+    if (k6Index > 0) {
+      // Remove 'k6' from its position and put it at the front
+      const k6Word = words.splice(k6Index, 1)[0];
+      words.unshift(k6Word);
+    }
+    
     return words.map((w, i) =>
       i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
     ).join("");
@@ -288,7 +293,7 @@ ${handleSummaryFn}
       lines.push(`  page = await browser.newPage();`);
       lines.push(`  console.log('Browser page opened once for all scenarios');`);
       // Set fallback base URL only if needed
-      lines.push(`  steps.theBaseUrlIs("https://demoqa.com");`);
+      lines.push(`  steps.k6TheBaseUrlIs("https://demoqa.com");`);
       lines.push(`  console.log('Fallback baseUrl set to:', globalThis.baseUrl || 'not set');`);
       lines.push(``);
     }
@@ -375,7 +380,9 @@ ${handleSummaryFn}
     return `
 export default async function () {
 ${lines.join("\n")}
-  return globalThis.savedTokens;
+console.log('🔍 Final savedTokens:', JSON.stringify(globalThis.savedTokens));
+
+  return globalThis.savedTokens || {};
 }`;
   }
 }
