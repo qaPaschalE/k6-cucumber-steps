@@ -590,6 +590,45 @@ export function k6IStoreResponseAs(propertyPath: string, alias: string): void;
 export function k6IStoreResponseDataAs(propertyPath: string, alias: string): void;
 
 /**
+ * Writes an alias value to a JSON file.
+ * 
+ * Retrieves a stored alias value and writes it to a JSON file.
+ * Creates the file and directory if they don't exist.
+ * 
+ * @category Storage
+ * 
+ * @example
+ * ```gherkin
+ * And I k6 write "authToken" to "data/tokens.json"
+ * And I k6 write "userId" to "data/user-id.json"
+ * ```
+ * 
+ * @param aliasName - Name of the stored alias to write
+ * @param fileName - Path to the JSON file (relative to project root)
+ */
+export function k6IWriteTo(aliasName: string, fileName: string): void;
+
+/**
+ * Writes an alias value to a JSON file with a custom key name.
+ * 
+ * Retrieves a stored alias value and writes it to a JSON file with a custom key.
+ * Creates the file and directory if they don't exist.
+ * 
+ * @category Storage
+ * 
+ * @example
+ * ```gherkin
+ * And I k6 write "authToken" to "data/tokens.json" as "access_token"
+ * And I k6 write "userId" to "data/user.json" as "id"
+ * ```
+ * 
+ * @param aliasName - Name of the stored alias to write
+ * @param fileName - Path to the JSON file (relative to project root)
+ * @param customKey - Custom key name to use in the JSON file
+ */
+export function k6IWriteToAs(aliasName: string, fileName: string, customKey: string): void;
+
+/**
  * Prints a stored alias value to console for debugging.
  * 
  * @category Debug

@@ -35,6 +35,20 @@ const metadata = [
     "parameters": ["jsonPath: string", "fileName: string"]
   },
   {
+    "step": "I k6 write {string} to {string}",
+    "functionName": "k6IWriteTo",
+    "description": "Writes an alias value to a JSON file (creates file if not exists)",
+    "category": "Storage",
+    "parameters": ["aliasName: string", "fileName: string"]
+  },
+  {
+    "step": "I k6 write {string} to {string} as {string}",
+    "functionName": "k6IWriteToAs",
+    "description": "Writes an alias value to a JSON file with custom key name",
+    "category": "Storage",
+    "parameters": ["aliasName: string", "fileName: string", "customKey: string"]
+  },
+  {
     "step": "I k6 store response {string} as {string}",
     "functionName": "k6IStoreResponseAs",
     "description": "Stores a response property with a custom alias",

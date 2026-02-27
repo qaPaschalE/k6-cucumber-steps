@@ -334,6 +334,25 @@ The `init` command creates a clean, industry-standard directory structure:
 
 ## 🛠️ CLI Reference
 
+#### Enable Autocomplete in VSCode
+
+For autocomplete to work in your feature files:
+
+1. **Install the Cucumber extension**: [Cucumber (Gherkin) Full Support](https://marketplace.visualstudio.com/items?itemName=alexkrechik.cucumberautocomplete)
+
+2. **Create `.vscode/settings.json`** in your project root:
+```json
+{
+  "cucumber.features": ["features/**/*.feature"],
+  "cucumber.stepDefinitions": ["steps/**/*.ts", "steps/**/*.js"],
+  "cucumber.autocomplete.snippets": true
+}
+```
+
+3. **Reload VSCode** - Autocomplete will show all 69 step definitions!
+
+📖 **Full setup guide:** [VSCode Autocomplete Setup](VSCODE_AUTOCOMPLETE_SETUP.md)
+
 #### Options
 
 The `npx k6-cucumber-steps` command accepts the following options:
@@ -584,7 +603,18 @@ Scenario: Store and reuse values
   # Debug: print stored values
   And I k6 print alias "authToken"
   And I k6 print all aliases
+
+  # Write alias to JSON file (NEW!)
+  And I k6 write "authToken" to "data/tokens.json"
+  And I k6 write "userId" to "data/user.json" as "id"
 ```
+
+**Write to File Features:**
+- ✅ Creates file if it doesn't exist
+- ✅ Creates directory structure if needed
+- ✅ Supports custom key names with `as`
+- ✅ Adds timestamp to written data
+- ✅ Reads from stored aliases only
 
 ### Response Assertion Steps
 

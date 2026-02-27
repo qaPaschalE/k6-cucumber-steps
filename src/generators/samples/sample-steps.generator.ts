@@ -265,6 +265,96 @@ export function k6IStoreIn(jsonPath: any, fileName: any) {
   console.log(\`   Aliases available: \${alias}, \${fileName}\`);
 }
 
+/**
+ * And I k6 write "aliasName" to "data/file.json"
+ * Writes an alias value to a JSON file. Creates the file if it doesn't exist.
+ */
+export function k6IWriteTo(aliasName: string, fileName: string) {
+  const fs = require('fs');
+  const path = require('path');
+  
+  // Get the alias value
+  const value = globalThis.storedAliases?.[aliasName];
+  
+  if (value === undefined) {
+    console.error(\`❌ Alias "\${aliasName}" not found. Available aliases:\`, globalThis.storedAliases ? Object.keys(globalThis.storedAliases) : 'none');
+    return;
+  }
+  
+  // Resolve file path
+  let filePath = fileName;
+  if (!path.isAbsolute(fileName)) {
+    filePath = path.join(process.cwd(), fileName);
+  }
+  
+  // Ensure directory exists
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(\`📁 Created directory: \${dir}\`);
+  }
+  
+  // Prepare data to write
+  let dataToWrite;
+  
+  // If value is already an object/array, use it directly
+  if (typeof value === 'object') {
+    dataToWrite = value;
+  } else {
+    // If it's a primitive, wrap it in an object with the alias name as key
+    dataToWrite = {
+      [aliasName]: value,
+      writtenAt: new Date().toISOString()
+    };
+  }
+  
+  // Write to file
+  fs.writeFileSync(filePath, JSON.stringify(dataToWrite, null, 2));
+  console.log(\`✅ Wrote alias "\${aliasName}" to \${filePath}\`);
+  console.log(\`   Value: \${typeof value === 'string' && value.length > 20 ? value.substring(0, 20) + '...' : JSON.stringify(value)}\`);
+}
+
+/**
+ * And I k6 write "aliasName" to "data/file.json" as "customKey"
+ * Writes an alias value to a JSON file with a custom key name.
+ */
+export function k6IWriteToAs(aliasName: string, fileName: string, customKey: string) {
+  const fs = require('fs');
+  const path = require('path');
+  
+  // Get the alias value
+  const value = globalThis.storedAliases?.[aliasName];
+  
+  if (value === undefined) {
+    console.error(\`❌ Alias "\${aliasName}" not found. Available aliases:\`, globalThis.storedAliases ? Object.keys(globalThis.storedAliases) : 'none');
+    return;
+  }
+  
+  // Resolve file path
+  let filePath = fileName;
+  if (!path.isAbsolute(fileName)) {
+    filePath = path.join(process.cwd(), fileName);
+  }
+  
+  // Ensure directory exists
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(\`📁 Created directory: \${dir}\`);
+  }
+  
+  // Prepare data with custom key
+  const dataToWrite = {
+    [customKey]: value,
+    writtenAt: new Date().toISOString()
+  };
+  
+  // Write to file
+  fs.writeFileSync(filePath, JSON.stringify(dataToWrite, null, 2));
+  console.log(\`✅ Wrote alias "\${aliasName}" as "\${customKey}" to \${filePath}\`);
+  console.log(\`   Value: \${typeof value === 'string' && value.length > 20 ? value.substring(0, 20) + '...' : JSON.stringify(value)}\`);
+}
+
 export function k6IAmAuthenticatedAsA(userType: any) {
   const token = globalThis.savedTokens?.[\`data/\${userType}.json\`] ||
     globalThis.savedTokens?.[userType];
