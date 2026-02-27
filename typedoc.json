@@ -1,0 +1,25 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "./src/steps.d.ts"
+  ],
+  "out": "./docs",
+  "name": "k6-cucumber-steps API Reference",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "HTTP",
+    "Authentication",
+    "Browser",
+    "Assertions",
+    "Storage",
+    "Performance",
+    "Debug",
+    "*"
+  ],
+  "sourceLinkTemplate": "https://github.com/qaPaschalE/k6-cucumber-steps/blob/{gitRevision}/{path}#L{line}",
+  "gitRevision": "main",
+  "readme": "none",
+  "plugin": []
+}
