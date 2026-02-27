@@ -140,6 +140,27 @@ const metadata = [
     "parameters": ["endpoint: string", "fileName: string"]
   },
   {
+    "step": "I k6 make a DELETE request to {string}",
+    "functionName": "k6IMakeADeleteRequestTo",
+    "description": "Makes a DELETE request to the specified endpoint (supports {{VARIABLE_NAME}})",
+    "category": "HTTP",
+    "parameters": ["endpoint: string"]
+  },
+  {
+    "step": "I k6 make a DELETE request to {string} with headers:",
+    "functionName": "k6IMakeADeleteRequestToWithHeaders",
+    "description": "Makes a DELETE request with custom headers (supports {{VARIABLE_NAME}})",
+    "category": "HTTP",
+    "parameters": ["endpoint: string", "headersTable: any"]
+  },
+  {
+    "step": "I k6 make a DELETE request to {string} with payload from {string}",
+    "functionName": "k6IMakeADeleteRequestToWithPayloadFile",
+    "description": "Makes a DELETE request using a payload.json file (supports {{VARIABLE_NAME}} and {{alias:NAME}})",
+    "category": "HTTP",
+    "parameters": ["endpoint: string", "fileName: string"]
+  },
+  {
     "step": "the k6 response status should be {string}",
     "functionName": "k6TheResponseStatusShouldBe",
     "description": "Asserts the response status code",

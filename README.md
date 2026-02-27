@@ -179,6 +179,30 @@ npx k6-cucumber-steps generate -f ./features
 
 **Excluded directories:** `node_modules/`, hidden directories (`.git/`, `.github/`, etc.)
 
+### 🗑️ DELETE Request Support (NEW!)
+
+Full DELETE request support with environment variables and alias replacement:
+
+```gherkin
+# Basic DELETE
+When I k6 make a DELETE request to "/users/1"
+
+# DELETE with env vars
+When I k6 make a DELETE request to "/users/{{USER_ID}}"
+
+# DELETE with custom headers
+When I k6 make a DELETE request to "/api/items/1" with headers:
+  | Authorization       |
+  | Bearer {{authToken}} |
+
+# DELETE with payload file
+When I k6 make a DELETE request to "/api/bulk" with payload from "data/delete-payload.json"
+```
+
+**Supports:**
+- `{{VARIABLE_NAME}}` for environment variables
+- `{{alias:NAME}}` for stored aliases in payload files
+
 ### 📁 Multiple Feature Paths
 
 Specify **multiple directories or files** using comma-separated paths.
@@ -591,6 +615,7 @@ When I k6 make a GET request to "/users/1" with headers:
 
 # POST requests
 When I k6 make a POST request to "/users"
+When I k6 make a POST request to "/users" with payload from "payload.json"
 
 # PUT requests
 When I k6 make a PUT request to "/users/1"
@@ -599,6 +624,13 @@ When I k6 make a PUT request to "/users/1" with body:
 # PATCH requests
 When I k6 make a PATCH request to "/settings"
 When I k6 make a PATCH request to "/settings" with body:
+
+# DELETE requests (NEW!)
+When I k6 make a DELETE request to "/users/1"
+When I k6 make a DELETE request to "/users/{{USER_ID}}" with headers:
+  | Authorization       |
+  | Bearer {{authToken}} |
+When I k6 make a DELETE request to "/api/items/1" with payload from "data/delete-payload.json"
 ```
 
 ### Sample Features

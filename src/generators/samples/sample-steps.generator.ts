@@ -529,6 +529,68 @@ export function k6IMakeAPatchRequestToWithBody(endpoint: string, bodyData: any) 
   globalThis.lastResponse = response;
 }
 
+/**
+ * Makes a DELETE request to the specified endpoint.
+ * Supports {{VARIABLE_NAME}} for env vars in endpoint.
+ */
+export function k6IMakeADeleteRequestTo(endpoint: string) {
+  const resolvedEndpoint = replaceEnvVariables(endpoint);
+  const url = \`\${baseUrl}\${resolvedEndpoint}\`;
+  const response = http.del(url, null, { headers: defaultHeaders });
+  globalThis.lastResponse = response;
+}
+
+/**
+ * Makes a DELETE request with custom headers.
+ * Supports {{VARIABLE_NAME}} for env vars in endpoint.
+ */
+export function k6IMakeADeleteRequestToWithHeaders(endpoint: string, headersTable: any) {
+  const resolvedEndpoint = replaceEnvVariables(endpoint);
+  const url = \`\${baseUrl}\${resolvedEndpoint}\`;
+  let requestHeaders = { ...defaultHeaders };
+  if (headersTable?.length > 0) {
+    Object.assign(requestHeaders, headersTable[0]);
+  }
+  const response = http.del(url, null, { headers: requestHeaders });
+  globalThis.lastResponse = response;
+}
+
+/**
+ * Makes a DELETE request using a payload.json file.
+ * Supports {{VARIABLE_NAME}} for env vars and {{alias:NAME}} for stored aliases.
+ */
+export function k6IMakeADeleteRequestToWithPayloadFile(endpoint: string, fileName: string) {
+  const fs = require('fs');
+  const path = require('path');
+  
+  // Resolve payload file path
+  let filePath = fileName;
+  if (!path.isAbsolute(fileName)) {
+    if (fs.existsSync(path.join(process.cwd(), 'data', fileName))) {
+      filePath = path.join(process.cwd(), 'data', fileName);
+    } else if (fs.existsSync(path.join(process.cwd(), fileName))) {
+      filePath = path.join(process.cwd(), fileName);
+    } else {
+      filePath = path.join(process.cwd(), 'payload.json');
+    }
+  }
+  
+  if (!fs.existsSync(filePath)) {
+    console.error(\`❌ Payload file not found: \${filePath}\`);
+    return;
+  }
+  
+  let payloadContent = fs.readFileSync(filePath, 'utf8');
+  payloadContent = replaceEnvVariables(payloadContent);
+  payloadContent = replaceAliasVariables(payloadContent);
+  
+  const resolvedEndpoint = replaceEnvVariables(endpoint);
+  const url = \`\${baseUrl}\${resolvedEndpoint}\`;
+  const response = http.del(url, payloadContent, { headers: defaultHeaders });
+  globalThis.lastResponse = response;
+  console.log(\`🗑️ DELETE \${url} with payload from \${filePath}\`);
+}
+
 export function k6TheResponsePropertyShouldBe(propertyPath: string, expectedValue: string) {
   const res = globalThis.lastResponse;
   if (!res) {

@@ -247,6 +247,42 @@ export function k6IMakeAPatchRequestTo(endpoint: string): void;
 export function k6IMakeAPatchRequestToWithBody(endpoint: string, bodyData: any): void;
 
 /**
+ * Makes a DELETE request to the specified endpoint.
+ * 
+ * Supports `{{VARIABLE_NAME}}` for environment variables in the endpoint.
+ * 
+ * @category HTTP
+ * 
+ * @example
+ * ```gherkin
+ * When I k6 make a DELETE request to "/api/users/1"
+ * When I k6 make a DELETE request to "/api/users/{{USER_ID}}"
+ * ```
+ * 
+ * @param endpoint - API endpoint (supports {{VARIABLE_NAME}} placeholders)
+ */
+export function k6IMakeADeleteRequestTo(endpoint: string): void;
+
+/**
+ * Makes a DELETE request with custom headers.
+ * 
+ * Supports `{{VARIABLE_NAME}}` for environment variables.
+ * 
+ * @category HTTP
+ * 
+ * @example
+ * ```gherkin
+ * When I k6 make a DELETE request to "/api/users/1" with headers:
+ *   | Authorization | Content-Type     |
+ *   | Bearer {{authToken}} | application/json |
+ * ```
+ * 
+ * @param endpoint - API endpoint (supports {{VARIABLE_NAME}} placeholders)
+ * @param headersTable - Headers data table
+ */
+export function k6IMakeADeleteRequestToWithHeaders(endpoint: string, headersTable: any[]): void;
+
+/**
  * Stores POST data for subsequent requests.
  * 
  * Supports `{{VARIABLE_NAME}}` placeholder replacement.
