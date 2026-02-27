@@ -1,18 +1,21 @@
-# k6-cucumber-steps 🥒🧪
+# k6-cucumber-steps 🥒🧪 - K6 Performance Testing with Cucumber BDD
+
+**k6-cucumber-steps** is a powerful CLI tool that enables you to run [k6](https://k6.io/) performance and load tests using [Cucumber](https://cucumber.io/) BDD (Behavior-Driven Development) syntax. Write performance tests in natural language Gherkin and execute them at scale with k6.
 
 <table align="center" style="margin-bottom:30px;"><tr><td align="center" width="9999" heigth="9999" >
- <img src="assets/paschal logo (2).png" alt="paschal Logo" style="margin-top:25px;" align="center"/>
+ <img src="assets/paschal logo (2).png" alt="k6-cucumber-steps logo" style="margin-top:25px;" align="center"/>
 </td></tr></table>
 
 [![npm version](https://img.shields.io/npm/v/k6-cucumber-steps.svg)](https://www.npmjs.com/package/k6-cucumber-steps)
 [![npm downloads](https://img.shields.io/npm/dt/k6-cucumber-steps.svg)](https://www.npmjs.com/package/k6-cucumber-steps)
+[![npm downloads](https://img.shields.io/npm/dm/k6-cucumber-steps.svg)](https://www.npmjs.com/package/k6-cucumber-steps)
 [![license](https://img.shields.io/npm/l/k6-cucumber-steps)](https://github.com/qaPaschalE/k6-cucumber-steps/blob/main/LICENSE)
 [![Cucumber](https://img.shields.io/badge/built%20with-Cucumber-3178c6.svg)](https://cucumber.io/)
 [![Node.js](https://img.shields.io/badge/node-%3E=18-green.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Sponsor](https://img.shields.io/github/sponsors/qaPaschalE?style=social)](https://github.com/sponsors/qaPaschalE)
-[![Build Status](https://github.com/qaPaschalE/k6-cucumber-steps/actions/workflows/k6-load-test.yml/badge.svg)](https://github.com/aPaschalE/k6-cucumber-steps/actions/workflows/k6-load-test.yml)
-
-Run [k6](https://k6.io/) performance/load tests using [Cucumber](https://cucumber.io/) BDD syntax with ease.
+[![Build Status](https://github.com/qaPaschalE/k6-cucumber-steps/actions/workflows/k6-load-test.yml/badge.svg)](https://github.com/qaPaschalE/k6-cucumber-steps/actions/workflows/k6-load-test.yml)
+[![Documentation](https://img.shields.io/badge/docs-TypeDoc-blue)](https://qapaschale.github.io/k6-cucumber-steps/)
 
 ---
 
