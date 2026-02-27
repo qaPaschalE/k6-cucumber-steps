@@ -23,7 +23,7 @@ All step definitions are fully documented and available in multiple formats:
 ### 1. TypeDoc API Documentation
 Interactive HTML documentation with search and navigation:
 
-**Online:** [View TypeDoc Documentation](https://qapaschale.github.io/k6-cucumber-steps/docs/)
+**Online:** [View TypeDoc Documentation](https://qapaschale.github.io/k6-cucumber-steps/)
 
 > 🚀 **Auto-Deployed**: Documentation is automatically generated and deployed to GitHub Pages on every push to the `main` branch.
 
