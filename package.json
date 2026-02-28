@@ -1,6 +1,6 @@
 {
   "name": "k6-cucumber-steps",
-  "version": "2.0.10",
+  "version": "2.0.10-alpha.0",
   "description": "Generate k6 test scripts from Cucumber feature files",
   "main": "dist/cli.js",
   "bin": {
