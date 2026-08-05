@@ -84,22 +84,66 @@ See the [Step Definitions Reference](#step-definitions-reference) section below 
 - 🛠 **JS & TS Support**: Generate your project in pure JavaScript or TypeScript.
 - 📊 **Metric Segmentation**: Scenarios are wrapped in k6 `group()` blocks for cleaner reporting.
 
-## 🆕 What's New in v2.0.8
+## 🆕 What's New in v2.1.1
 
-### ⚠️ Breaking Change: Step Definition Prefix
+### 🚨 BREAKING CHANGES for existing projects (v2.0.x)
+If you are upgrading an existing project that you initialized with v2.0.x, there are two breaking changes:
+1. **Removed Default `k6` Prefix**: The `k6` prefix has been removed from all default step definitions. If you remove the `k6` prefix from your existing `.feature` files, the generated steps will no longer match your older `sample.steps.ts` exports.
+2. **Import Path Change**: The CLI now generates code that imports steps from `../steps/index.ts` instead of `../steps/sample.steps.ts`.
 
-All step definitions now use the **`k6` prefix** to avoid conflicts with other step libraries and make it clear these are k6-specific steps.
+**How to upgrade:**
+Run `npx k6-cucumber-steps init <your-project-dir>` again to scaffold the new `steps/index.ts` and `steps/hooks.ts` architecture (this will safely merge with your `package.json` and will not delete your existing files). Then, update your `.feature` files to remove the `k6` prefix, or pass `--add-prefix k6` during initialization if you want to keep your existing syntax.
 
-**Before:**
+### Natural Language Default & Configurable Prefixes
+
+We removed the forced `k6` prefix! Step definitions now use pure, natural BDD language by default. 
+
+**Default:**
 ```gherkin
 Given the base URL is "{{API_BASE_URL}}"
 When I make a GET request to "/users/1"
 ```
 
-**After:**
+If you use `k6-cucumber-steps` in the same VSCode workspace as another Cucumber testing tool (like Playwright), you might experience autocomplete clashes. You can now use the `--add-prefix` flag to safely namespace your steps without breaking natural language:
+
+```bash
+npx k6-cucumber-steps init my-project --add-prefix "load test"
+```
+
+**With `--add-prefix "load test"`:**
 ```gherkin
-Given the k6 base URL is "{{API_BASE_URL}}"
-When I k6 make a GET request to "/users/1"
+Given the load test base URL is "{{API_BASE_URL}}"
+When I load test make a GET request to "/users/1"
+```
+
+### Custom Steps made easier
+When you run `init`, a `steps/index.ts` file is now generated. This is the new entry point for all steps, making it incredibly easy to write and export your own custom steps alongside the built-in ones. Values are resolved from:
+- `__ENV` (k6 environment variables)
+- `K6_*` prefixed variables
+- Global context variables
+
+### ⚙️ Configuration File (`k6-cucumber.json`)
+You no longer have to pass flags like `-f` or `-o` every time you run the `generate` command. Running `init` will now generate a `k6-cucumber.json` config file at the root of your project:
+```json
+{
+  "features": "./features",
+  "output": "./generated",
+  "lang": "ts"
+}
+```
+The CLI automatically picks this up when you run `npx k6-cucumber-steps generate`.
+
+### 🔄 Cucumber Hooks (`before`, `after`)
+We now support lifecycle hooks for your scenarios! The `init` command generates a `steps/hooks.ts` file. You can export `beforeAll`, `before`, `after`, and `afterAll` functions to run custom JavaScript/TypeScript code before and after your scenarios or entire test suites.
+
+### 🚀 CI/CD Pipeline Generator
+You can now automatically scaffold a ready-to-use CI/CD load testing pipeline for your repository by simply passing the `--ci` flag during initialization:
+```bash
+# Generates .github/workflows/k6.yml
+npx k6-cucumber-steps init my-project --ci github
+
+# Generates .gitlab-ci.yml
+npx k6-cucumber-steps init my-project --ci gitlab
 ```
 
 ### 🌍 Environment Variable Support
@@ -111,10 +155,10 @@ Replace placeholders in your tests using `{{VARIABLE_NAME}}` syntax. Values are 
 
 ```gherkin
 Background:
-  Given the k6 base URL is "{{API_BASE_URL}}"
+  Given the base URL is "{{API_BASE_URL}}"
 
 Scenario: Login with environment credentials
-  When I k6 authenticate with the following url and request body as "user":
+  When I authenticate with the following url and request body as "user":
     | endpoint | userName            | password            |
     | /login   | {{TEST_USER_USERNAME}} | {{TEST_USER_PASSWORD}} |
 ```
@@ -125,44 +169,44 @@ Store response data with custom aliases and reuse across scenarios:
 
 ```gherkin
 Scenario: Store and reuse values
-  When I k6 make a POST request to "/login"
-  And I k6 store response "data.accessToken" as "authToken"
-  Then the k6 alias "authToken" should not be empty
+  When I make a POST request to "/login"
+  And I store response "data.accessToken" as "authToken"
+  Then the alias "authToken" should not be empty
 
 Scenario: Compare against stored values
-  Then the k6 response property "userName" should be alias "expectedUsername"
-  And the k6 response property "message" should contain alias "expectedMessage"
+  Then the response property "userName" should be alias "expectedUsername"
+  And the response property "message" should contain alias "expectedMessage"
 ```
 
 ### 📝 New Assertion Steps
 
 | Step | Description | Example |
 |------|-------------|---------|
-| `theResponsePropertyShouldNotBeEmpty` | Validate property has a value | `Then the k6 response property "data.token" should not be empty` |
-| `theResponsePropertyShouldBeTrue/False` | Boolean assertions | `Then the k6 response property "success" should be true` |
-| `theResponsePropertyShouldHaveProperty` | Check nested properties | `Then the k6 response property "data" should have property "user"` |
-| `theResponseTimeShouldBeLessThan...` | Performance assertions | `Then the k6 response time should be less than "500" milliseconds` |
-| `theAliasShouldNotBeEmpty` | Validate stored aliases | `Then the k6 alias "authToken" should not be empty` |
-| `theAliasShouldBeEqualTo` | Compare alias to value | `Then the k6 alias "username" should be equal to "test_user"` |
+| `theResponsePropertyShouldNotBeEmpty` | Validate property has a value | `Then the response property "data.token" should not be empty` |
+| `theResponsePropertyShouldBeTrue/False` | Boolean assertions | `Then the response property "success" should be true` |
+| `theResponsePropertyShouldHaveProperty` | Check nested properties | `Then the response property "data" should have property "user"` |
+| `theResponseTimeShouldBeLessThan...` | Performance assertions | `Then the response time should be less than "500" milliseconds` |
+| `theAliasShouldNotBeEmpty` | Validate stored aliases | `Then the alias "authToken" should not be empty` |
+| `theAliasShouldBeEqualTo` | Compare alias to value | `Then the alias "username" should be equal to "test_user"` |
 
 ### 🌐 Extended HTTP Support
 
-- **PUT requests**: `When I k6 make a PUT request to "/users/1"`
-- **PUT with body**: `When I k6 make a PUT request to "/users/1" with body:`
-- **PATCH requests**: `When I k6 make a PATCH request to "/api/settings"`
-- **PATCH with body**: `When I k6 make a PATCH request to "/api/settings" with body:`
+- **PUT requests**: `When I make a PUT request to "/users/1"`
+- **PUT with body**: `When I make a PUT request to "/users/1" with body:`
+- **PATCH requests**: `When I make a PATCH request to "/api/settings"`
+- **PATCH with body**: `When I make a PATCH request to "/api/settings" with body:`
 
 ### 🖨️ Debug Helpers
 
 ```gherkin
-And I k6 print alias "authToken"      # Print a specific alias
-And I k6 print all aliases            # Print all stored aliases
+And I print alias "authToken"      # Print a specific alias
+And I print all aliases            # Print all stored aliases
 ```
 
 ### 🧹 Utility Steps
 
 ```gherkin
-Given I k6 clear auth token           # Remove Authorization header
+Given I clear auth token           # Remove Authorization header
 ```
 
 ## 🆕 What's New in v2.0.10
@@ -199,18 +243,18 @@ Full DELETE request support with environment variables and alias replacement:
 
 ```gherkin
 # Basic DELETE
-When I k6 make a DELETE request to "/users/1"
+When I make a DELETE request to "/users/1"
 
 # DELETE with env vars
-When I k6 make a DELETE request to "/users/{{USER_ID}}"
+When I make a DELETE request to "/users/{{USER_ID}}"
 
 # DELETE with custom headers
-When I k6 make a DELETE request to "/api/items/1" with headers:
+When I make a DELETE request to "/api/items/1" with headers:
   | Authorization       |
   | Bearer {{authToken}} |
 
 # DELETE with payload file
-When I k6 make a DELETE request to "/api/bulk" with payload from "data/delete-payload.json"
+When I make a DELETE request to "/api/bulk" with payload from "data/delete-payload.json"
 ```
 
 **Supports:**
@@ -303,9 +347,11 @@ You can now combine **Protocol-level (HTTP)** load testing and **Browser-level (
 
 #### Initialize in current directory:
 ```bash
-npx k6-cucumber-steps init
-# or
-npx k6-cucumber-steps init .
+# Initialize a new project with natural language steps
+npx k6-cucumber-steps init k6-tests
+
+# OR initialize with a custom prefix to avoid autocomplete clashes (e.g., with Playwright)
+npx k6-cucumber-steps init k6-tests --add-prefix "load test"
 ```
 
 → Creates `features/`, `steps/`, `generated/`, etc. **in your current folder**

@@ -19,10 +19,12 @@ program
   .command("init")
   .description("Initialize a new k6-cucumber project")
   .option("-l, --lang <language>", "Programming language (js or ts)", "ts")
+  .option("--add-prefix <string>", "Add a prefix to all generated step definitions (e.g., 'load test')")
+  .option("--ci <provider>", "Generate CI/CD pipeline configuration (e.g., github, gitlab)")
   .argument("[path]", "Output directory path", ".")
   .action(async (path, options) => {
     const initCmd = new InitCommand();
-    await initCmd.execute(path, options.lang as "js" | "ts");
+    await initCmd.execute(path, options.lang as "js" | "ts", options.addPrefix, options.ci);
   });
 
 program
@@ -51,9 +53,30 @@ interface GenerateOptions {
   excludeTags?: string;
 }
 
-async function generateK6Scripts(options: GenerateOptions) {
+function loadConfig(): Partial<GenerateOptions> {
+  const configPath = process.cwd() + "/k6-cucumber.json";
+  if (fs.existsSync(configPath)) {
+    try {
+      return JSON.parse(fs.readFileSync(configPath, "utf8"));
+    } catch (e) {
+      console.warn("⚠️  Warning: Failed to parse k6-cucumber.json");
+    }
+  }
+  return {};
+}
+
+async function generateK6Scripts(cliOptions: GenerateOptions) {
+  const fileConfig = loadConfig();
+  const options = {
+    features: cliOptions.features !== "./features" ? cliOptions.features : (fileConfig.features || cliOptions.features),
+    output: cliOptions.output !== "./generated" ? cliOptions.output : (fileConfig.output || cliOptions.output),
+    lang: cliOptions.lang !== "ts" ? cliOptions.lang : (fileConfig.lang || cliOptions.lang),
+    tags: cliOptions.tags || fileConfig.tags,
+    excludeTags: cliOptions.excludeTags || fileConfig.excludeTags,
+  };
+
   console.log("Generating k6 scripts from feature files...");
-  console.log(`📂 Searching for feature files in: ${options.features || "./features"}`);
+  console.log(`📂 Searching for feature files in: ${options.features}`);
 
   const parser = new FeatureParser();
   const features = await parser.loadAndParseFeatures(options.features || "./features");

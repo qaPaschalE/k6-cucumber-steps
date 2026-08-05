@@ -5,9 +5,13 @@ import fs from "fs";
 import path from "path";
 // src/commands/init.command.ts
 export class InitCommand {
+  private projectGenerator = new ProjectGenerator();
+
   async execute(
     outputPath: string,
     language: "js" | "ts" = "ts",
+    prefix?: string,
+    ci?: string,
   ): Promise<void> {
     const config: ProjectConfig = {
       language,
@@ -23,7 +27,7 @@ export class InitCommand {
     console.log(`Output directory: ${path.resolve(outputPath)}`);
 
     const generator = new ProjectGenerator();
-    generator.generateProjectStructure(config, outputPath);
+    generator.generateProjectStructure(config, outputPath, prefix, ci);
 
     console.log(`✅ Project structure generated successfully in: ${path.resolve(outputPath)}`);
     console.log(`📋 Next steps:`);

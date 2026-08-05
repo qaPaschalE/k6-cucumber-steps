@@ -142,10 +142,10 @@ When autocomplete works, you'll see:
 Given | When | Then
   ↓
 [Dropdown appears]
-  ├─ the k6 base URL is {string}
-  ├─ I k6 make a GET request to {string}
-  ├─ I k6 make a POST request to {string}
-  ├─ the k6 response status should be {string}
+  ├─ the base URL is {string}
+  ├─ I make a GET request to {string}
+  ├─ I make a POST request to {string}
+  ├─ the response status should be {string}
   └─ ... (65 more)
 ```
 
@@ -163,7 +163,7 @@ Each suggestion shows:
 When you select a step, VSCode auto-jumps to placeholders:
 
 ```gherkin
-When I k6 make a GET request to "|cursor|"
+When I make a GET request to "|cursor|"
                                               ↑
                                    Press Tab to fill this
 ```
@@ -219,6 +219,15 @@ Disable these extensions (they can conflict):
 - ❌ Any other Cucumber extensions
 
 Keep only **ONE** Cucumber extension active!
+
+### Option 4: Autocomplete Clashes with Playwright / Cypress
+If you are running `k6-cucumber-steps` in the SAME VSCode workspace as another Cucumber tool, you might see duplicate steps in autocomplete. 
+
+To fix this, initialize your project with a prefix:
+```bash
+npx k6-cucumber-steps init my-project --add-prefix "load test"
+```
+This namespaces all your k6 steps (e.g., `When I load test make a GET request`), cleanly separating them from your other tools!
 
 ---
 

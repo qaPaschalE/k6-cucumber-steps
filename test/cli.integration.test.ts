@@ -84,22 +84,25 @@ Feature: Integration Test
     expect(script).toContain('export function handleSummary');
     expect(script).toContain('import http from "k6/http"');
     expect(script).toContain('import { check, sleep, group } from "k6"');
-    expect(script).toContain('import * as steps from "../steps/sample.steps.ts"');
+    expect(script).toContain('import * as steps from "../steps/index.ts"');
 
     // Check browser import for @browser scenario
     expect(script).toContain('import { browser } from "k6/browser"');
 
     // Check scenario steps
-    expect(script).toContain('steps.k6TheBaseUrlIs("{{API_BASE_URL}}")');
-    expect(script).toContain('steps.k6IMakeAGetRequestTo("/users/1")');
-    expect(script).toContain('steps.k6TheResponseStatusShouldBe("200")');
-    expect(script).toContain('steps.k6TheResponseShouldContain("name")');
-    expect(script).toContain('steps.k6IHaveTheFollowingPostData');
-    expect(script).toContain('steps.k6IMakeAPostRequestTo("/posts")');
-    expect(script).toContain('steps.k6TheResponseStatusShouldBe("201")');
-    expect(script).toContain('steps.k6TheResponsePropertyShouldBe("title", "{{POST_TITLE}}")');
-    expect(script).toContain('await steps.k6INavigateToThePage(page, "/home")');
-    expect(script).toContain('await steps.k6IShouldSeeTheText(page, "Welcome")');
+    expect(script).toContain('steps.theK6BaseUrlIs("{{API_BASE_URL}}")');
+    expect(script).toContain('steps.iK6MakeAGetRequestTo("/users/1")');
+    expect(script).toContain('steps.theK6ResponseStatusShouldBe("200")');
+    expect(script).toContain('steps.theK6ResponseShouldContain("name")');
+
+    expect(script).toContain('steps.iK6HaveTheFollowingPostData');
+    expect(script).toContain('steps.iK6MakeAPostRequestTo("/posts")');
+    expect(script).toContain('steps.theK6ResponseStatusShouldBe("201")');
+    expect(script).toContain('steps.theK6ResponsePropertyShouldBe("title", "{{POST_TITLE}}")');
+
+    // Check browser steps
+    expect(script).toContain('await steps.iK6NavigateToThePage(page, "/home")');
+    expect(script).toContain('await steps.iK6ShouldSeeTheText(page, "Welcome")');
   });
 
   it('respects tag filtering --tags', () => {

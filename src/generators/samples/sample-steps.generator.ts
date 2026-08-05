@@ -5,11 +5,26 @@ import { ProjectConfig } from "../../types";
 import { StepsMetadataGenerator } from "./steps-metadata.generator";
 
 export class SampleStepsGenerator {
-  generate(outputPath: string, config: ProjectConfig): void {
+  generate(outputPath: string, config: ProjectConfig, prefix: string = ""): void {
     const isTS = config.language === "ts";
     const stepExtension = isTS ? ".ts" : ".js";
 
-    const sampleSteps = this.buildSampleStepsContent(isTS);
+    let sampleSteps = this.buildSampleStepsContent(isTS);
+
+    // Replace the default "k6" prefix in function names with the new prefix (or remove it)
+    const prefixWords = prefix.split(/[^a-zA-Z0-9]+/).filter(w => w);
+    const prefixCamel = prefixWords.map((w, i) => i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+    
+    // For each "export function k6<Rest>" or "export async function k6<Rest>"
+    sampleSteps = sampleSteps.replace(/export (async )?function k6([A-Z][a-zA-Z0-9_]*)/g, (match, asyncPart, restOfName) => {
+      if (!prefixCamel) {
+        // lower-case the first letter of the remaining name since k6 is removed
+        const lowerFirst = restOfName.charAt(0).toLowerCase() + restOfName.slice(1);
+        return `export ${asyncPart || ''}function ${lowerFirst}`;
+      } else {
+        return `export ${asyncPart || ''}function ${prefixCamel}${restOfName}`;
+      }
+    });
 
     fs.writeFileSync(
       path.join(outputPath, "steps", `sample.steps${stepExtension}`),
@@ -18,7 +33,7 @@ export class SampleStepsGenerator {
 
     // Generate metadata.json for step autocomplete
     const metadataGenerator = new StepsMetadataGenerator();
-    metadataGenerator.generate(outputPath);
+    metadataGenerator.generate(outputPath, prefix);
   }
 
   private buildSampleStepsContent(isTS: boolean): string {

@@ -11,9 +11,34 @@ export interface StepMetadata {
 }
 
 export class StepsMetadataGenerator {
-  generate(outputPath: string): void {
-    const metadata = this.getStepsMetadata();
+  generate(outputPath: string, prefix: string = ""): void {
+    const rawMetadata = this.getStepsMetadata();
     
+    const prefixWords = prefix.split(/[^a-zA-Z0-9]+/).filter(w => w);
+    const prefixCamel = prefixWords.map((w, i) => i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+
+    const metadata = rawMetadata.map(step => {
+      let newPattern = step.pattern.replace(/\bk6\b\s*/, prefix ? `${prefix} ` : '');
+      newPattern = newPattern.replace(/\s+/g, ' ').trim();
+
+      let newFunctionName = step.functionName;
+      if (step.functionName.startsWith('k6')) {
+        const restOfName = step.functionName.slice(2);
+        if (!prefixCamel) {
+          const lowerFirst = restOfName.charAt(0).toLowerCase() + restOfName.slice(1);
+          newFunctionName = lowerFirst;
+        } else {
+          newFunctionName = prefixCamel + restOfName;
+        }
+      }
+
+      return {
+        ...step,
+        pattern: newPattern,
+        functionName: newFunctionName
+      };
+    });
+
     fs.writeFileSync(
       path.join(outputPath, "steps", "metadata.json"),
       JSON.stringify(metadata, null, 2),

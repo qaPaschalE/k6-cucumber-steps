@@ -15,31 +15,29 @@ describe('K6ScriptGenerator', () => {
       return (generator as any).normalizeStepText(text);
     };
 
-    it('removes quoted strings and normalizes (keyword already stripped by parser)', () => {
-      // The Gherkin parser provides step.text WITHOUT the keyword
-      expect(normalize('the k6 base URL is "https://example.com"')).toBe('k6TheBaseUrlIs');
-      expect(normalize('I k6 make a GET request to "/users/1"')).toBe('k6IMakeAGetRequestTo');
-      expect(normalize('the k6 response status should be "200"')).toBe('k6TheResponseStatusShouldBe');
+    it('removes quoted strings and normalizes', () => {
+      expect(normalize('the k6 base URL is "https://example.com"')).toBe('theK6BaseUrlIs');
+      expect(normalize('I k6 make a GET request to "/users/1"')).toBe('iK6MakeAGetRequestTo');
+      expect(normalize('the k6 response status should be "200"')).toBe('theK6ResponseStatusShouldBe');
     });
 
     it('handles unquoted numbers (Scenario Outline expansion)', () => {
-      // After placeholder expansion, status codes become unquoted numbers
-      expect(normalize('the k6 response status should be 200')).toBe('k6TheResponseStatusShouldBe200');
-      // Note: This produces k6TheResponseStatusShouldBe200 but exported fn is k6TheResponseStatusShouldBe
+      expect(normalize('the k6 response status should be 200')).toBe('theK6ResponseStatusShouldBe200');
+      // Note: This produces theK6ResponseStatusShouldBe200 but exported fn is theK6ResponseStatusShouldBe
       // This is a known gap - outline rows with numeric expectedStatus will fail
     });
 
-    it('moves k6 to front if not first', () => {
-      expect(normalize('I k6 make a GET request to "/users/1"')).toBe('k6IMakeAGetRequestTo');
-      expect(normalize('I k6 click on the element "button"')).toBe('k6IClickOnTheElement');
+    it('preserves words in their original order (no k6 repositioning)', () => {
+      expect(normalize('I k6 make a GET request to "/users/1"')).toBe('iK6MakeAGetRequestTo');
+      expect(normalize('I k6 click on the element "button"')).toBe('iK6ClickOnTheElement');
     });
 
     it('strips "with headers" suffix', () => {
-      expect(normalize('I k6 make a GET request to "/users/1" with headers:')).toBe('k6IMakeAGetRequestTo');
+      expect(normalize('I k6 make a GET request to "/users/1" with headers:')).toBe('iK6MakeAGetRequestTo');
     });
 
     it('handles multiple quoted args', () => {
-      expect(normalize('I k6 fill the field "#input-field" with "First" "1"')).toBe('k6IFillTheFieldWith');
+      expect(normalize('I k6 fill the field "#input-field" with "First" "1"')).toBe('iK6FillTheFieldWith');
     });
   });
 
@@ -93,9 +91,9 @@ describe('K6ScriptGenerator', () => {
       const script = generator.generateK6File(scenarios, metadata, config);
 
       expect(script).toContain('export default async function ()');
-      expect(script).toContain('steps.k6TheBaseUrlIs("https://api.example.com")');
-      expect(script).toContain('steps.k6IMakeAGetRequestTo("/users/1")');
-      expect(script).toContain('steps.k6TheResponseStatusShouldBe("200")');
+      expect(script).toContain('steps.theK6BaseUrlIs("https://api.example.com")');
+      expect(script).toContain('steps.iK6MakeAGetRequestTo("/users/1")');
+      expect(script).toContain('steps.theK6ResponseStatusShouldBe("200")');
       expect(script).toContain('export const options =');
       expect(script).toContain('"vus": 5');
       expect(script).toContain('"duration": "10s"');
@@ -121,9 +119,8 @@ describe('K6ScriptGenerator', () => {
 
       expect(script).toContain('import { browser } from "k6/browser"');
       expect(script).toContain('let page;');
-      expect(script).toContain('page = await browser.newPage()');
-      expect(script).toContain('await steps.k6INavigateToThePage(page, "/home")');
-      expect(script).toContain('await steps.k6IShouldSeeTheText(page, "Welcome")');
+      expect(script).toContain('await steps.iK6NavigateToThePage(page, "/home")');
+      expect(script).toContain('await steps.iK6ShouldSeeTheText(page, "Welcome")');
       expect(script).toContain('"executor": "shared-iterations"');
       expect(script).toContain('"iterations": 1');
     });
@@ -140,6 +137,12 @@ describe('K6ScriptGenerator', () => {
       expect(script).toContain('export function handleSummary');
       expect(script).toContain('htmlReport(data)');
       expect(script).toContain('textSummary(data');
+      
+      // Verify hooks are injected
+      expect(script).toContain('steps.beforeAll');
+      expect(script).toContain('steps.afterAll');
+      expect(script).toContain('steps.before');
+      expect(script).toContain('steps.after');
     });
   });
 });

@@ -22,10 +22,16 @@ globalThis.storedAliases = globalThis.storedAliases || {};
 
     // We only need to return an empty object, as VUs cannot pass data to teardown
     const teardownFn = config.language === "ts"
-      ? `export function teardown() {
+      ? `export function teardown(data: any) {
+  if (typeof steps.afterAll === 'function') {
+    steps.afterAll(data);
+  }
   return {};
 }`
-      : `export function teardown() {
+      : `export function teardown(data) {
+  if (typeof steps.afterAll === 'function') {
+    steps.afterAll(data);
+  }
   return {};
 }`;
 
@@ -64,7 +70,11 @@ ${fileOpens}
 ${options}
 
 export function setup() {
-  return { v: Date.now() };
+  let customData = {};
+  if (typeof steps.beforeAll === 'function') {
+    customData = steps.beforeAll() || {};
+  }
+  return Object.assign({ v: Date.now() }, customData);
 }
 
 ${testFunction}
@@ -99,7 +109,7 @@ ${handleSummaryFn}
       baseImports.push('import { browser } from "k6/browser";');
     }
 
-    baseImports.push(`import * as steps from "../steps/sample.steps.${ext}";`);
+    baseImports.push(`import * as steps from "../steps/index.${ext}";`);
 
     return baseImports.join("\n");
   }
@@ -232,15 +242,6 @@ ${handleSummaryFn}
 
     const words = clean.split(/\s+/).filter(w => w);
     
-    // Check if the step starts with "k6" or contains "k6" as a keyword
-    // If text contains "k6", move it to the front
-    const k6Index = words.findIndex(w => w.toLowerCase() === 'k6');
-    if (k6Index > 0) {
-      // Remove 'k6' from its position and put it at the front
-      const k6Word = words.splice(k6Index, 1)[0];
-      words.unshift(k6Word);
-    }
-    
     return words.map((w, i) =>
       i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
     ).join("");
@@ -273,6 +274,9 @@ ${handleSummaryFn}
 
       // Init group
       lines.push(`  group(${JSON.stringify(scenario.name + " - init")}, () => {`);
+      lines.push(`    if (typeof steps.before === 'function') {`);
+      lines.push(`      steps.before({ scenarioName: ${JSON.stringify(scenario.name)} });`);
+      lines.push(`    }`);
       lines.push(`    console.log('Initiating scenario: ${scenario.name}');`);
       lines.push(`  });`);
 
@@ -326,6 +330,9 @@ ${handleSummaryFn}
 
       // Cleanup group
       lines.push(`  group(${JSON.stringify(scenario.name + " - cleanup")}, () => {`);
+      lines.push(`    if (typeof steps.after === 'function') {`);
+      lines.push(`      steps.after({ scenarioName: ${JSON.stringify(scenario.name)} });`);
+      lines.push(`    }`);
       lines.push(`    console.log('Finished: ${scenario.name}');`);
       lines.push(`  });`);
       lines.push(`  sleep(1);`);
