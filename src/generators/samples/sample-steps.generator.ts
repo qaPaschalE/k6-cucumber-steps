@@ -50,28 +50,13 @@ function replaceEnvVariables(text: string): string {
  * Supports {{VARIABLE_NAME}} for env vars and {{alias:NAME}} for stored aliases.
  */
 export function k6IUsePayloadJsonFromFile(fileName: string) {
-  const fs = require('fs');
-  const path = require('path');
+  const varName = 'file_' + fileName.replace(/[^a-zA-Z0-9]/g, '_');
+  let payloadContent = (globalThis as any)[varName];
 
-  // Resolve path relative to current working directory or data folder
-  let filePath = fileName;
-  if (!path.isAbsolute(fileName)) {
-    // Try data/ folder first, then root
-    if (fs.existsSync(path.join(process.cwd(), 'data', fileName))) {
-      filePath = path.join(process.cwd(), 'data', fileName);
-    } else if (fs.existsSync(path.join(process.cwd(), fileName))) {
-      filePath = path.join(process.cwd(), fileName);
-    } else {
-      filePath = path.join(process.cwd(), 'payload.json');
-    }
-  }
-
-  if (!fs.existsSync(filePath)) {
-    console.error(\`❌ Payload file not found: \${filePath}\`);
+  if (!payloadContent) {
+    console.error(\`❌ Payload file not pre-loaded: \${fileName}. Ensure it was detected by the parser.\`);
     return;
   }
-
-  let payloadContent = fs.readFileSync(filePath, 'utf8');
 
   // Replace environment variables {{VARIABLE_NAME}}
   payloadContent = replaceEnvVariables(payloadContent);
@@ -80,7 +65,7 @@ export function k6IUsePayloadJsonFromFile(fileName: string) {
   payloadContent = replaceAliasVariables(payloadContent);
 
   globalThis.lastPostData = payloadContent;
-  console.log(\`📄 Loaded payload from: \${filePath}\`);
+  console.log(\`📄 Loaded payload from: \${fileName}\`);
 }
 
 /**
@@ -270,9 +255,6 @@ export function k6IStoreIn(jsonPath: any, fileName: any) {
  * Writes an alias value to a JSON file. Creates the file if it doesn't exist.
  */
 export function k6IWriteTo(aliasName: string, fileName: string) {
-  const fs = require('fs');
-  const path = require('path');
-  
   // Get the alias value
   const value = globalThis.storedAliases?.[aliasName];
   
@@ -281,36 +263,7 @@ export function k6IWriteTo(aliasName: string, fileName: string) {
     return;
   }
   
-  // Resolve file path
-  let filePath = fileName;
-  if (!path.isAbsolute(fileName)) {
-    filePath = path.join(process.cwd(), fileName);
-  }
-  
-  // Ensure directory exists
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-    console.log(\`📁 Created directory: \${dir}\`);
-  }
-  
-  // Prepare data to write
-  let dataToWrite;
-  
-  // If value is already an object/array, use it directly
-  if (typeof value === 'object') {
-    dataToWrite = value;
-  } else {
-    // If it's a primitive, wrap it in an object with the alias name as key
-    dataToWrite = {
-      [aliasName]: value,
-      writtenAt: new Date().toISOString()
-    };
-  }
-  
-  // Write to file
-  fs.writeFileSync(filePath, JSON.stringify(dataToWrite, null, 2));
-  console.log(\`✅ Wrote alias "\${aliasName}" to \${filePath}\`);
+  console.log(\`✅ Alias "\${aliasName}" stored in memory for \${fileName} (File writing is unsupported in k6 VUs).\`);
   console.log(\`   Value: \${typeof value === 'string' && value.length > 20 ? value.substring(0, 20) + '...' : JSON.stringify(value)}\`);
 }
 
@@ -319,9 +272,6 @@ export function k6IWriteTo(aliasName: string, fileName: string) {
  * Writes an alias value to a JSON file with a custom key name.
  */
 export function k6IWriteToAs(aliasName: string, fileName: string, customKey: string) {
-  const fs = require('fs');
-  const path = require('path');
-  
   // Get the alias value
   const value = globalThis.storedAliases?.[aliasName];
   
@@ -330,28 +280,7 @@ export function k6IWriteToAs(aliasName: string, fileName: string, customKey: str
     return;
   }
   
-  // Resolve file path
-  let filePath = fileName;
-  if (!path.isAbsolute(fileName)) {
-    filePath = path.join(process.cwd(), fileName);
-  }
-  
-  // Ensure directory exists
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-    console.log(\`📁 Created directory: \${dir}\`);
-  }
-  
-  // Prepare data with custom key
-  const dataToWrite = {
-    [customKey]: value,
-    writtenAt: new Date().toISOString()
-  };
-  
-  // Write to file
-  fs.writeFileSync(filePath, JSON.stringify(dataToWrite, null, 2));
-  console.log(\`✅ Wrote alias "\${aliasName}" as "\${customKey}" to \${filePath}\`);
+  console.log(\`✅ Alias "\${aliasName}" as "\${customKey}" stored in memory for \${fileName} (File writing is unsupported in k6 VUs).\`);
   console.log(\`   Value: \${typeof value === 'string' && value.length > 20 ? value.substring(0, 20) + '...' : JSON.stringify(value)}\`);
 }
 
@@ -527,27 +456,14 @@ export function k6IMakeAPostRequestTo(endpoint: string) {
  * Supports {{VARIABLE_NAME}} for env vars and {{alias:NAME}} for stored aliases.
  */
 export function k6IMakeAPostRequestToWithPayloadFile(endpoint: string, fileName: string) {
-  const fs = require('fs');
-  const path = require('path');
+  const varName = 'file_' + fileName.replace(/[^a-zA-Z0-9]/g, '_');
+  let payloadContent = (globalThis as any)[varName];
 
-  // Resolve payload file path
-  let filePath = fileName;
-  if (!path.isAbsolute(fileName)) {
-    if (fs.existsSync(path.join(process.cwd(), 'data', fileName))) {
-      filePath = path.join(process.cwd(), 'data', fileName);
-    } else if (fs.existsSync(path.join(process.cwd(), fileName))) {
-      filePath = path.join(process.cwd(), fileName);
-    } else {
-      filePath = path.join(process.cwd(), 'payload.json');
-    }
-  }
-
-  if (!fs.existsSync(filePath)) {
-    console.error(\`❌ Payload file not found: \${filePath}\`);
+  if (!payloadContent) {
+    console.error(\`❌ Payload file not pre-loaded: \${fileName}. Ensure it was detected by the parser.\`);
     return;
   }
 
-  let payloadContent = fs.readFileSync(filePath, 'utf8');
   payloadContent = replaceEnvVariables(payloadContent);
   payloadContent = replaceAliasVariables(payloadContent);
 
@@ -555,7 +471,7 @@ export function k6IMakeAPostRequestToWithPayloadFile(endpoint: string, fileName:
   const url = \`\${baseUrl}\${resolvedEndpoint}\`;
   const response = http.post(url, payloadContent, { headers: defaultHeaders });
   globalThis.lastResponse = response;
-  console.log(\`📤 POST \${url} with payload from \${filePath}\`);
+  console.log(\`📤 POST \${url} with payload from \${fileName}\`);
 }
 
 export function k6IMakeAPostRequestToWithBody(endpoint: string, bodyData: any) {
@@ -650,27 +566,14 @@ export function k6IMakeADeleteRequestToWithHeaders(endpoint: string, headersTabl
  * Supports {{VARIABLE_NAME}} for env vars and {{alias:NAME}} for stored aliases.
  */
 export function k6IMakeADeleteRequestToWithPayloadFile(endpoint: string, fileName: string) {
-  const fs = require('fs');
-  const path = require('path');
+  const varName = 'file_' + fileName.replace(/[^a-zA-Z0-9]/g, '_');
+  let payloadContent = (globalThis as any)[varName];
   
-  // Resolve payload file path
-  let filePath = fileName;
-  if (!path.isAbsolute(fileName)) {
-    if (fs.existsSync(path.join(process.cwd(), 'data', fileName))) {
-      filePath = path.join(process.cwd(), 'data', fileName);
-    } else if (fs.existsSync(path.join(process.cwd(), fileName))) {
-      filePath = path.join(process.cwd(), fileName);
-    } else {
-      filePath = path.join(process.cwd(), 'payload.json');
-    }
-  }
-  
-  if (!fs.existsSync(filePath)) {
-    console.error(\`❌ Payload file not found: \${filePath}\`);
+  if (!payloadContent) {
+    console.error(\`❌ Payload file not pre-loaded: \${fileName}. Ensure it was detected by the parser.\`);
     return;
   }
   
-  let payloadContent = fs.readFileSync(filePath, 'utf8');
   payloadContent = replaceEnvVariables(payloadContent);
   payloadContent = replaceAliasVariables(payloadContent);
   
@@ -678,7 +581,7 @@ export function k6IMakeADeleteRequestToWithPayloadFile(endpoint: string, fileNam
   const url = \`\${baseUrl}\${resolvedEndpoint}\`;
   const response = http.del(url, payloadContent, { headers: defaultHeaders });
   globalThis.lastResponse = response;
-  console.log(\`🗑️ DELETE \${url} with payload from \${filePath}\`);
+  console.log(\`🗑️ DELETE \${url} with payload from \${fileName}\`);
 }
 
 export function k6TheResponsePropertyShouldBe(propertyPath: string, expectedValue: string) {

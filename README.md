@@ -165,6 +165,17 @@ And I k6 print all aliases            # Print all stored aliases
 Given I k6 clear auth token           # Remove Authorization header
 ```
 
+## 🆕 What's New in v2.0.10
+
+### 🛡️ Critical Bug Fixes & Architecture Overhaul
+
+- **Native k6 Execution Environment**: Removed all internal usages of Node.js modules (`fs`, `path`) from generated execution scripts, fully aligning step definitions with the restricted k6 Goja runtime.
+- **Dynamic Payload Loading**: Support for `.json` file payloads has been rewritten to utilize native k6 `open()` binding injections, allowing fully compliant memory-based data handling within Virtual Users (VUs) without crashes.
+- **Robust Argument Parsing**: Fixed a critical bug in `k6-script.generator.ts` where quoted arguments containing commas (e.g. JSON strings or DataTables) would be incorrectly split.
+- **Reliable Gherkin Expansion**: Improved parsing in `feature.parser.ts` to correctly handle `Scenario Outline` placeholder replacements when values reside within or outside quotes, preventing generation of malformed code. 
+- **Accurate Tag Filtering**: Fixed CLI and runtime tag matching issues where tags provided with `@` prefixes would fail to match successfully.
+- **Command Path Escaping**: Script execution now properly escapes output paths, preventing runner crashes when file directories contain spaces.
+
 ## 🆕 What's New in v2.0.9
 
 ### 🔍 Recursive Feature File Search

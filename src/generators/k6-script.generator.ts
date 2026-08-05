@@ -12,22 +12,24 @@ export class K6ScriptGenerator {
  */
 globalThis.savedTokens = globalThis.savedTokens || {};
 globalThis.lastResponse = globalThis.lastResponse || {};
+globalThis.storedAliases = globalThis.storedAliases || {};
+
 `;
 
     const imports = this.generateImports(config, metadata);
     const options = this.generateOptions(metadata);
     const testFunction = this.generateTestFunction(scenarios, metadata, config);
 
-    // ✅ Simplified teardown: just return the tokens (no globalThis needed)
+    // We only need to return an empty object, as VUs cannot pass data to teardown
     const teardownFn = config.language === "ts"
-      ? `export function teardown(tokensFromDefault: Record<string, any>) {
-  return tokensFromDefault;
+      ? `export function teardown() {
+  return {};
 }`
-      : `export function teardown(tokensFromDefault) {
-  return tokensFromDefault;
+      : `export function teardown() {
+  return {};
 }`;
 
-    // ✅ handleSummary already uses data.teardown_data — no change needed
+    // handleSummary only generates standard reports, removing broken token persistence
     const handleSummaryFn = config.language === "ts"
       ? `export function handleSummary(data: any): Record<string, any> {
   const reports: Record<string, any> = {
@@ -35,25 +37,6 @@ globalThis.lastResponse = globalThis.lastResponse || {};
     './reports/results.json': JSON.stringify(data),
     stdout: textSummary(data, { indent: ' ', enableColors: true }),
   };
-
-  console.log('--- Summary File Write Audit ---');
-  
-  const tokens = data.teardown_data || {};
-  const keys = Object.keys(tokens).filter(k => k.endsWith('.json'));
-  console.log('Tokens found:', keys.length > 0 ? keys.join(', ') : 'None');
-
-  for (const [path, tokenValue] of Object.entries(tokens)) {
-    if (path.endsWith('.json')) {
-      const fullPath = path.startsWith('./') ? path : \`./\${path}\`;
-      reports[fullPath] = JSON.stringify(
-        typeof tokenValue === 'string' ? { access_token: tokenValue } : tokenValue,
-        null,
-        2
-      );
-      console.log(\`✅ Writing: \${fullPath}\`);
-    }
-  }
-
   return reports;
 }`
       : `export function handleSummary(data) {
@@ -62,31 +45,21 @@ globalThis.lastResponse = globalThis.lastResponse || {};
     './reports/results.json': JSON.stringify(data),
     stdout: textSummary(data, { indent: ' ', enableColors: true }),
   };
-
-  console.log('--- Summary File Write Audit ---');
-  
-  const tokens = data["root_group::teardown"] || {};
-  const keys = Object.keys(tokens).filter(k => k.endsWith('.json'));
-  console.log('Tokens found:', keys.length > 0 ? keys.join(', ') : 'None');
-
-  for (const [path, tokenValue] of Object.entries(tokens)) {
-    if (path.endsWith('.json')) {
-      // ✅ Use path directly — no ./ prefix
-      reports[path] = JSON.stringify(
-        typeof tokenValue === 'string' ? { access_token: tokenValue } : tokenValue,
-        null,
-        2
-      );
-      console.log(\`✅ Writing: \${path}\`);
-    }
-  }
-
   return reports;
 }`;
+
+    // Inject global open() calls for payload files detected in the scenarios
+    const payloadFiles = this.extractPayloadFiles(scenarios);
+    const fileOpens = payloadFiles.map(f => {
+      const varName = 'file_' + f.replace(/[^a-zA-Z0-9]/g, '_');
+      return `globalThis['${varName}'] = open('${f}');`;
+    }).join('\\n');
 
     return `
 ${header}
 ${imports}
+
+${fileOpens}
 
 ${options}
 
@@ -253,7 +226,7 @@ ${handleSummaryFn}
     const noQuotes = text.replace(/"[^"]*"|'[^']*'/g, "");
     // Normalize "with headers" -> treat as separate keyword
     let clean = noQuotes
-      .replace(/\s+with\s+headers\s*$/, "") // remove trailing "with headers"
+      .replace(/\s+with\s+headers:?\s*$/, "") // remove trailing "with headers:"
       .replace(/[^a-zA-Z0-9\s]/g, " ")
       .trim();
 
@@ -273,11 +246,10 @@ ${handleSummaryFn}
     ).join("");
   }
 
-  private extractArguments(text: string): string {
-    // Only extract quoted strings (double or single quotes)
+  private extractArguments(text: string): string[] {
+    // Extract quoted strings and keep them as individual array elements to avoid comma-splitting bugs
     const matches = text.match(/"([^"]*)"|'([^']*)'/g) || [];
-    // Return the quoted literals as-is (e.g., '"hello"', "'1'")
-    return matches.join(", ");
+    return matches;
   }
 
   // Inside K6ScriptGenerator.ts
@@ -292,9 +264,6 @@ ${handleSummaryFn}
       lines.push(`try {`);
       lines.push(`  page = await browser.newPage();`);
       lines.push(`  console.log('Browser page opened once for all scenarios');`);
-      // Set fallback base URL only if needed
-      lines.push(`  steps.k6TheBaseUrlIs("https://demoqa.com");`);
-      lines.push(`  console.log('Fallback baseUrl set to:', globalThis.baseUrl || 'not set');`);
       lines.push(``);
     }
 
@@ -311,8 +280,7 @@ ${handleSummaryFn}
         lines.push(`  try {`);
         scenario.steps.forEach((step) => {
           const name = this.normalizeStepText(step.text);
-          const argsStr = this.extractArguments(step.text);
-          const args = argsStr ? argsStr.split(/,\s*/).filter(Boolean) : [];
+          const args = this.extractArguments(step.text);
 
           const needsPage = [
             "navigate", "click", "see", "fill", "type", "press", "waitfor", "wait", "locator",
@@ -325,7 +293,7 @@ ${handleSummaryFn}
             params.push("page");
           }
           params.push(...args);
-          if (step.argument && typeof step.argument === 'string') {
+          if (step.argument !== null && step.argument !== undefined) {
             params.push(JSON.stringify(step.argument));
           }
 
@@ -344,15 +312,11 @@ ${handleSummaryFn}
         // Non-browser (HTTP/API) steps
         scenario.steps.forEach((step) => {
           const name = this.normalizeStepText(step.text);
-          const argsStr = this.extractArguments(step.text);
-          const args = argsStr ? argsStr.split(/,\s*/).filter(Boolean) : [];
+          const args = this.extractArguments(step.text);
 
           const params: string[] = [];
           params.push(...args);
-          if (step.argument && typeof step.argument === 'string') {
-            params.push(JSON.stringify(step.argument));
-          }
-          if (step.argument && Array.isArray(step.argument)) {
+          if (step.argument !== null && step.argument !== undefined) {
             params.push(JSON.stringify(step.argument));
           }
 
@@ -380,9 +344,23 @@ ${handleSummaryFn}
     return `
 export default async function () {
 ${lines.join("\n")}
-console.log('🔍 Final savedTokens:', JSON.stringify(globalThis.savedTokens));
+  return {};
+}
+`;
+  }
 
-  return globalThis.savedTokens || {};
-}`;
+  private extractPayloadFiles(scenarios: Scenario[]): string[] {
+    const files = new Set<string>();
+    scenarios.forEach(scenario => {
+      scenario.steps.forEach(step => {
+        // Find .json files in quoted arguments
+        const matches = step.text.match(/"([^"]+\\.json)"|'([^']+\\.json)'/g) || [];
+        matches.forEach(m => {
+          const file = m.replace(/^['"]|['"]$/g, '');
+          files.add(file);
+        });
+      });
+    });
+    return Array.from(files);
   }
 }

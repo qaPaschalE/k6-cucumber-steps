@@ -126,11 +126,42 @@ export class FeatureParser {
                   // Process steps: inject background + replace placeholders + map arguments
                   const scenarioSteps = scenario.steps.map((step: any) => {
                     let newText = step.text;
-                    // Replace <placeholders>
+                    // Replace <placeholders>. A placeholder that sits inside an existing
+                    // quoted segment (e.g. "/users/<userId>") needs the raw value so we don't
+                    // get nested quotes ("/users/"1""). A placeholder that is NOT inside a
+                    // quote (e.g. "should be <expectedStatus>") must be wrapped in quotes, so
+                    // normalizeStepText treats it as a quoted arg (extractArguments pulls
+                    // quoted strings) and the generated function name matches the step's
+                    // declared functionName. Without wrapping, an unquoted Examples value like
+                    // `200` would bake into the function name (k6TheResponseStatusShouldBe200)
+                    // and break the call site.
                     Object.keys(rowData).forEach((key) => {
+                      const raw = rowData[key];
+                      const placeholder = `<${key}>`;
+                      const placeholderIdx = newText.indexOf(placeholder);
+                      let isInsideQuote = false;
+                      if (placeholderIdx >= 0) {
+                        let quoteChar: string | null = null;
+                        for (let i = 0; i < placeholderIdx; i++) {
+                          const char = newText[i];
+                          if (char === '"' || char === "'") {
+                            if (!quoteChar) {
+                              quoteChar = char;
+                            } else if (quoteChar === char) {
+                              quoteChar = null;
+                            }
+                          }
+                        }
+                        isInsideQuote = quoteChar !== null;
+                      }
+                      const alreadyQuoted =
+                        (raw.startsWith('"') && raw.endsWith('"')) ||
+                        (raw.startsWith("'") && raw.endsWith("'"));
+                      const replacement =
+                        isInsideQuote || alreadyQuoted ? raw : `"${raw}"`;
                       newText = newText.replace(
                         new RegExp(`<${key}>`, "g"),
-                        rowData[key],
+                        replacement,
                       );
                     });
 

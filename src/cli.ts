@@ -66,7 +66,7 @@ async function generateK6Scripts(options: GenerateOptions) {
 
   // Include by tags
   if (options.tags) {
-    const includeTags = options.tags.split(",").map(t => t.trim()).filter(t => t);
+    const includeTags = options.tags.split(",").map(t => t.trim().replace(/^@/, '')).filter(t => t);
     console.log(`🏷️  Including scenarios with tags: ${includeTags.join(', ')}`);
     
     let beforeCount = totalScenarios;
@@ -82,7 +82,7 @@ async function generateK6Scripts(options: GenerateOptions) {
 
   // Exclude by tags
   if (options.excludeTags) {
-    const excludeTags = options.excludeTags.split(",").map(t => t.trim()).filter(t => t);
+    const excludeTags = options.excludeTags.split(",").map(t => t.trim().replace(/^@/, '')).filter(t => t);
     console.log(`🚫 Excluding scenarios with tags: ${excludeTags.join(', ')}`);
     
     let beforeCount = features.reduce((sum, f) => sum + f.scenarios.length, 0);
@@ -121,7 +121,7 @@ async function generateK6Scripts(options: GenerateOptions) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  const outputFile = `${options.output}/test.generated.${options.lang}`;
+  const outputFile = `${outputDir}/test.generated.${options.lang}`;
   fs.writeFileSync(outputFile, k6Script);
 
   console.log(`✅ Generated k6 script: ${outputFile}`);

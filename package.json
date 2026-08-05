@@ -1,6 +1,6 @@
 {
   "name": "k6-cucumber-steps",
-  "version": "2.0.10-alpha.0",
+  "version": "2.1.0",
   "description": "Generate k6 test scripts from Cucumber feature files",
   "main": "dist/cli.js",
   "bin": {
@@ -11,7 +11,8 @@
     "postbuild": "node scripts/generate-metadata.js",
     "dev": "tsc --watch",
     "start": "node dist/cli.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepublishOnly": "npm run build",
     "docs": "typedoc",
     "docs:serve": "npx http-server ./docs -p 8080 -o"
@@ -66,7 +67,9 @@
     "@types/node": "^25.0.10",
     "fs-extra": "^11.3.3",
     "typedoc": "^0.28.17",
-    "typedoc-plugin-markdown": "^4.10.0"
+    "typedoc-plugin-markdown": "^4.10.0",
+    "vitest": "^3.0.0",
+    "@vitest/coverage-v8": "^3.0.0"
   },
   "files": [
     "dist/**/*",

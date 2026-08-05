@@ -77,13 +77,6 @@ export class StepsMetadataGenerator {
         parameters: ["propertyPath: string", "alias: string"]
       },
       {
-        pattern: "I k6 store response {string} as {string}",
-        functionName: "k6IStoreResponseDataAs",
-        description: "Alias for k6IStoreResponseAs",
-        category: "Storage",
-        parameters: ["propertyPath: string", "alias: string"]
-      },
-      {
         pattern: "I k6 print alias {string}",
         functionName: "k6IPrintAlias",
         description: "Prints a stored alias value to console",
@@ -171,7 +164,56 @@ export class StepsMetadataGenerator {
         category: "HTTP",
         parameters: ["data: string"]
       },
-      
+      {
+        pattern: "I k6 use payload json from file {string}",
+        functionName: "k6IUsePayloadJsonFromFile",
+        description: "Loads request body from a JSON file (supports {{VARIABLE_NAME}} and {{alias:NAME}})",
+        category: "HTTP",
+        parameters: ["fileName: string"]
+      },
+      {
+        pattern: "I k6 make a POST request to {string} with payload from {string}",
+        functionName: "k6IMakeAPostRequestToWithPayloadFile",
+        description: "Makes a POST request using a payload.json file (supports {{VARIABLE_NAME}} and {{alias:NAME}})",
+        category: "HTTP",
+        parameters: ["endpoint: string", "fileName: string"]
+      },
+      {
+        pattern: "I k6 make a DELETE request to {string}",
+        functionName: "k6IMakeADeleteRequestTo",
+        description: "Makes a DELETE request to the specified endpoint (supports {{VARIABLE_NAME}})",
+        category: "HTTP",
+        parameters: ["endpoint: string"]
+      },
+      {
+        pattern: "I k6 make a DELETE request to {string} with headers:",
+        functionName: "k6IMakeADeleteRequestToWithHeaders",
+        description: "Makes a DELETE request with custom headers (supports {{VARIABLE_NAME}})",
+        category: "HTTP",
+        parameters: ["endpoint: string", "headersTable: any"]
+      },
+      {
+        pattern: "I k6 make a DELETE request to {string} with payload from {string}",
+        functionName: "k6IMakeADeleteRequestToWithPayloadFile",
+        description: "Makes a DELETE request using a payload.json file (supports {{VARIABLE_NAME}} and {{alias:NAME}})",
+        category: "HTTP",
+        parameters: ["endpoint: string", "fileName: string"]
+      },
+      {
+        pattern: "I k6 write {string} to {string}",
+        functionName: "k6IWriteTo",
+        description: "Writes an alias value to a JSON file (creates file if not exists)",
+        category: "Storage",
+        parameters: ["aliasName: string", "fileName: string"]
+      },
+      {
+        pattern: "I k6 write {string} to {string} as {string}",
+        functionName: "k6IWriteToAs",
+        description: "Writes an alias value to a JSON file with custom key name",
+        category: "Storage",
+        parameters: ["aliasName: string", "fileName: string", "customKey: string"]
+      },
+
       // Response Assertion Steps
       {
         pattern: "the k6 response status should be {string}",

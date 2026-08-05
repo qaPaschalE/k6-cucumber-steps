@@ -265,22 +265,46 @@ export function k6IMakeADeleteRequestTo(endpoint: string): void;
 
 /**
  * Makes a DELETE request with custom headers.
- * 
+ *
  * Supports `{{VARIABLE_NAME}}` for environment variables.
- * 
+ *
  * @category HTTP
- * 
+ *
  * @example
  * ```gherkin
  * When I k6 make a DELETE request to "/api/users/1" with headers:
  *   | Authorization | Content-Type     |
  *   | Bearer {{authToken}} | application/json |
  * ```
- * 
+ *
  * @param endpoint - API endpoint (supports {{VARIABLE_NAME}} placeholders)
  * @param headersTable - Headers data table
  */
 export function k6IMakeADeleteRequestToWithHeaders(endpoint: string, headersTable: any[]): void;
+
+/**
+ * Makes a DELETE request using a payload.json file.
+ *
+ * Supports:
+ * - `{{VARIABLE_NAME}}` for environment variables
+ * - `{{alias:NAME}}` for stored aliases
+ *
+ * File resolution order:
+ * 1. `data/{fileName}` if exists
+ * 2. `{fileName}` in project root if exists
+ * 3. `payload.json` in project root as fallback
+ *
+ * @category HTTP
+ *
+ * @example
+ * ```gherkin
+ * When I k6 make a DELETE request to "/api/bulk" with payload from "data/delete-payload.json"
+ * ```
+ *
+ * @param endpoint - API endpoint (supports {{VARIABLE_NAME}} placeholders)
+ * @param fileName - Path to the JSON file
+ */
+export function k6IMakeADeleteRequestToWithPayloadFile(endpoint: string, fileName: string): void;
 
 /**
  * Stores POST data for subsequent requests.

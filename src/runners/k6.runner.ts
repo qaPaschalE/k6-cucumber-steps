@@ -27,7 +27,7 @@ export class K6Runner {
 
     // Apply tag filtering if specified
     if (options.tags) {
-      const tagFilters = options.tags.split(",");
+      const tagFilters = options.tags.split(",").map(t => t.trim().replace(/^@/, ''));
       features = this.filterFeaturesByTags(features, tagFilters);
     }
 
@@ -80,7 +80,7 @@ export class K6Runner {
   ): Promise<void> {
     console.log("Running k6 test...");
 
-    const options = ["run", scriptPath];
+    const options = ["run", `"${scriptPath}"`];
     if (additionalOptions) {
       options.push(...additionalOptions);
     }

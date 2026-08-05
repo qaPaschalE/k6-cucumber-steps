@@ -3,6 +3,11 @@ node_modules/
 dist/
 !dist/metadata.json # Include generated metadata in dist
 
+# Test artifacts
+test/integration-output/
+coverage/
+.vitest/
+
 # k6 generated reports
 reports/
 *.html
@@ -37,6 +42,7 @@ yarn-error.log*
 # Qwen context file
 QWEN.md
 RELEASE_NOTES*.md
+CLAUDE.md
 
 firebase-debug.log
 
