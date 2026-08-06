@@ -104,7 +104,7 @@ Given the base URL is "{{API_BASE_URL}}"
 When I make a GET request to "/users/1"
 ```
 
-If you use `k6-cucumber-steps` in the same VSCode workspace as another Cucumber testing tool (like Playwright), you might experience autocomplete clashes. You can now use the `--add-prefix` flag to safely namespace your steps without breaking natural language:
+If you use `k6-cucumber-steps` in the same VSCode workspace as another Cucumber testing tool (like Playwright via [playwright-cucumber-ts-steps](https://www.npmjs.com/package/playwright-cucumber-ts-steps)), you might experience autocomplete clashes. You can now use the `--add-prefix` flag to safely namespace your steps without breaking natural language:
 
 ```bash
 npx k6-cucumber-steps init my-project --add-prefix "load test"
